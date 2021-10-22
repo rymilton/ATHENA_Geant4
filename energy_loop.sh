@@ -2,14 +2,14 @@
 set -e
 
 filename="../mymac_WScFi.mac"
-num_threads=14
+num_threads=12
 
-particle="e-"
+particle="pi+"
 
-num_events=50000
-energies=(0.5 1 2 5 10 20 30)
+num_events=5000
+energies=(1 2 5 10 20 30 40 50 60 70 80 90 100)
 
-for (( k=1; k<7; k++ ))
+for (( k=8; k<13; k++ ))
 do
 
 	sed -i "s/\/analysis\/setFileName .*/\/analysis\/setFileName ${particle}_${energies[k]}GeV/" $filename
@@ -18,7 +18,6 @@ do
 	sed -i "s/\/run\/beamOn .*/\/run\/beamOn ${num_events}/" $filename
 	make
 	echo "Working on energy ${energies[k]}"
-	outfile="${particle}_gev${energies[k]}.log"
 	echo "./ATHENA_Geometry -m mymac_WScFi.mac -t ${num_threads}"
 	time ./ATHENA_Geometry -m mymac_WScFi.mac -t ${num_threads}
 done

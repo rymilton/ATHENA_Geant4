@@ -29,28 +29,37 @@ RunAction::RunAction()
   // Note: merging ntuples is available only with Root output
 
   // Book histograms, ntuple
-  
-  // Creating histograms
-  analysisManager->CreateH1("ECalEdep","Edep in ECal", 100, 0., 800*MeV);
-  analysisManager->CreateH1("HCalEdep","Edep in HCal", 100, 0., 800*MeV);
 
 
   analysisManager->CreateNtuple("EdepTotal", "Edep");
   analysisManager->CreateNtupleDColumn("ECal_Edep_Total");
   analysisManager->CreateNtupleDColumn("HCal_Edep_Total");
+  analysisManager->CreateNtupleIColumn("ECal_NumHits_Total");
+  analysisManager->CreateNtupleIColumn("HCal_NumHits_Total");
+  analysisManager->CreateNtupleIColumn("eventID");
   analysisManager->FinishNtuple();
 
   analysisManager->CreateNtuple("ECalBlocks", "ECalBlocks");
   analysisManager->CreateNtupleDColumn("ECal_Edep_Block");
   analysisManager->CreateNtupleIColumn("ECal_BlockXid");
   analysisManager->CreateNtupleIColumn("ECal_BlockY");
+  analysisManager->CreateNtupleIColumn("eventID");
   analysisManager->FinishNtuple();
 
   analysisManager->CreateNtuple("HCalTowers", "HCalTowers");
   analysisManager->CreateNtupleDColumn("HCal_Edep_Tower");
   analysisManager->CreateNtupleIColumn("HCal_TowerXid");
   analysisManager->CreateNtupleIColumn("HCal_TowerYid");
+  analysisManager->CreateNtupleIColumn("eventID");
   analysisManager->FinishNtuple();
+
+  analysisManager->CreateNtuple("HCalLayers", "HCalLayers");
+  analysisManager->CreateNtupleDColumn("HCal_Edep_Tile");
+  analysisManager->CreateNtupleIColumn("HCal_Layerid");
+  analysisManager->CreateNtupleIColumn("HCal_NumHits_Tile");
+  analysisManager->CreateNtupleIColumn("eventID");
+  analysisManager->FinishNtuple();
+
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -78,23 +87,23 @@ void RunAction::EndOfRunAction(const G4Run* /*run*/)
   // print histogram statistics
   //
   auto analysisManager = G4AnalysisManager::Instance();
-  if(isMaster) 
-  {
-    G4cout << G4endl << " ----> print histograms statistic ";
+  // if(isMaster) 
+  // {
+  //   G4cout << G4endl << " ----> print histograms statistic ";
     
-      G4cout << "for the entire run " << G4endl << G4endl; 
+  //     G4cout << "for the entire run " << G4endl << G4endl; 
     
-    G4cout << " ECal : mean = " 
-       << G4BestUnit(analysisManager->GetH1(0)->mean(), "Energy") 
-       << " rms = " 
-       << G4BestUnit(analysisManager->GetH1(0)->rms(),  "Energy") << G4endl;
+  //   G4cout << " ECal : mean = " 
+  //      << G4BestUnit(analysisManager->GetH1(0)->mean(), "Energy") 
+  //      << " rms = " 
+  //      << G4BestUnit(analysisManager->GetH1(0)->rms(),  "Energy") << G4endl;
     
-    G4cout << " HCal : mean = " 
-       << G4BestUnit(analysisManager->GetH1(1)->mean(), "Energy") 
-       << " rms = " 
-       << G4BestUnit(analysisManager->GetH1(1)->rms(),  "Energy") << G4endl;
+  //   G4cout << " HCal : mean = " 
+  //      << G4BestUnit(analysisManager->GetH1(1)->mean(), "Energy") 
+  //      << " rms = " 
+  //      << G4BestUnit(analysisManager->GetH1(1)->rms(),  "Energy") << G4endl;
     
-  }
+  // }
   // save histograms & ntuple
   //
   analysisManager->Write();

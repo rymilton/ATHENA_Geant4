@@ -8,6 +8,8 @@
 #include "G4ThreeVector.hh"
 #include "G4SDManager.hh"
 #include "G4ios.hh"
+#include "G4SystemOfUnits.hh"
+#include "DetectorConstruction.hh"
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
@@ -58,18 +60,17 @@ G4bool CalorimeterSD::ProcessHits(G4Step* step,
   
   // step length
   G4double stepLength = 0.;
-  if ( step->GetTrack()->GetDefinition()->GetPDGCharge() != 0. ) {
-    stepLength = step->GetStepLength();
+
+  if ( step->GetTrack()->GetDefinition()->GetPDGCharge() != 0. ) {  // Only using step length for Birk's formula, which applies only to charged particles
+    stepLength = step->GetStepLength();  
   }
-
   if ( edep==0. && stepLength == 0. ) return false;      
-
   auto touchable = (step->GetPreStepPoint()->GetTouchable());
   
   auto volume = step->GetPreStepPoint()->GetTouchableHandle()->GetVolume();
   // Get calorimeter cell id 
   auto layerNumber = touchable->GetReplicaNumber(1);
-  
+
   // Get hit accounting data for this cell
   auto hit = (*fHitsCollection)[layerNumber];
   if ( ! hit ) {
@@ -82,17 +83,17 @@ G4bool CalorimeterSD::ProcessHits(G4Step* step,
   // Get hit for total accounting
   auto hitTotal 
     = (*fHitsCollection)[fHitsCollection->entries()-1];
-  
+
   // Adjusting the energy for the Birk's constant
   G4Material* mat = volume->GetLogicalVolume()->GetMaterial();
-  G4double charge =step->GetTrack()->GetDefinition()->GetPDGCharge();
-  G4double birk=mat->GetIonisation()->GetBirksConstant();
-  if(birk*edep*stepLength*charge !=0) edep /= (1.+birk*edep/stepLength);
+  G4double charge = step->GetTrack()->GetDefinition()->GetPDGCharge();
+  G4double birk = mat->GetIonisation()->GetBirksConstant();
+  if(birk*edep*stepLength*charge !=0) edep /= (1. + birk*edep/stepLength); // Done for charged particles in organic scintillators
 
   // Add values
   hit->Add(edep, stepLength);
   hitTotal->Add(edep, stepLength); 
-      
+  
   return true;
 }
 

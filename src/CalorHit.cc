@@ -17,7 +17,8 @@ G4ThreadLocal G4Allocator<CalorHit>* CalorHitAllocator = 0;
 CalorHit::CalorHit()
  : G4VHit(),
    fEdep(0.),
-   fTrackLength(0.)
+   fTrackLength(0.),
+   fNumHits(0)
 {}
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

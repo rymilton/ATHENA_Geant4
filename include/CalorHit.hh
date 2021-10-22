@@ -41,10 +41,12 @@ class CalorHit : public G4VHit
     // get methods
     G4double GetEdep() const;
     G4double GetTrackLength() const;
+    G4int GetNumHits() const;
       
   private:
     G4double fEdep;        ///< Energy deposit in the sensitive volume
     G4double fTrackLength; ///< Track length in the  sensitive volume
+    G4int fNumHits; // Number of hits in the sensitive volume
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -76,6 +78,7 @@ inline void CalorHit::operator delete(void *hit)
 inline void CalorHit::Add(G4double de, G4double dl) {
   fEdep += de; 
   fTrackLength += dl;
+  fNumHits++;
 }
 
 inline G4double CalorHit::GetEdep() const { 
@@ -84,6 +87,9 @@ inline G4double CalorHit::GetEdep() const {
 
 inline G4double CalorHit::GetTrackLength() const { 
   return fTrackLength; 
+}
+inline G4int CalorHit::GetNumHits() const {
+  return fNumHits;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

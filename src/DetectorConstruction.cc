@@ -60,11 +60,11 @@ void DetectorConstruction::DefineMaterials()
   auto nistManager = G4NistManager::Instance();
   nistManager->FindOrBuildMaterial("G4_Fe"); // Using iron for steel
   nistManager->FindOrBuildMaterial("G4_POLYSTYRENE"); // Fiber core material
-  nistManager->FindOrBuildMaterial("G4_PLEXIGLASS"); // PMMA
+  nistManager->FindOrBuildMaterial("G4_PLEXIGLASS"); // PMMA for fiber cladding
   nistManager->FindOrBuildMaterial("G4_Galactic"); // Vacuum
 
   // Print materials
-  //G4cout << *(G4Material::GetMaterialTable()) << G4endl;
+  // G4cout << *(G4Material::GetMaterialTable()) << G4endl;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -110,7 +110,7 @@ G4VPhysicalVolume* DetectorConstruction::DefineVolumes()
 
   G4MaterialPropertiesTable* MaterialTable = new G4MaterialPropertiesTable();
   ActiveMaterial->SetMaterialPropertiesTable(MaterialTable);
-  ActiveMaterial->GetIonisation()->SetBirksConstant(.2*mm/MeV);
+  ActiveMaterial->GetIonisation()->SetBirksConstant(.126*mm/MeV);
   
   if ( !DefaultMaterial || !AbsorberPlateMaterial || !ActiveMaterial || !CladdingMaterial || !ECalAbsorberMaterial ) 
   {
@@ -142,21 +142,6 @@ G4VPhysicalVolume* DetectorConstruction::DefineVolumes()
                  0,                // copy number
                  fCheckOverlaps);  // checking overlaps 
 
-  // NOTE: Origin set as center of 6x6 HCal section. 
-  /*
-  [] [] [] [] [] []
-  [] [] [] [] [] []
-  [] [] [] [] [] []
-  [] [] [] [] [] []
-  [] [] [] [] [] []
-  [] [] [] [] [] []
-  Origin in the middle of (3,3), (3,4), (4,3), (4,4)
-    y ^
-      |
-  x <--  z into page
-  
-  In the code, i = 0, j = 0 is top right. i = 6, j = 6 is bottom left  
-  */ 
 
   // HCal
 
@@ -214,11 +199,12 @@ G4VPhysicalVolume* DetectorConstruction::DefineVolumes()
       sprintf(nameHolder, "HCalAbsorber%d%d", i, j);
       G4VSolid* HCalAbsorberS = new G4Box("HCalAbsorber", (HCal_X - HCal_WLS_X)/2, (HCal_Y - HCal_Steel_Y)/2, AbsorberPlateThickness/2);
       HCalAbsorberLV[i][j] = new G4LogicalVolume(HCalAbsorberS, AbsorberPlateMaterial, nameHolder);
-      new G4PVPlacement(0, G4ThreeVector(0., 0., -ActivePlateThickness/2), HCalAbsorberLV[i][j], "HCalAbsorber", HCalLayerLV[i][j], false, i+j, fCheckOverlaps);
+      new G4PVPlacement(0, G4ThreeVector(0., 0., -ActivePlateThickness/2), HCalAbsorberLV[i][j], nameHolder, HCalLayerLV[i][j], false, i+j, fCheckOverlaps);
     }
   }
 
   // Scintillating plates in HCal towers
+
   // Behind the absorber plates in each layer
   G4LogicalVolume* HCalActiveLV[fNumHCalTowers][fNumHCalTowers];
 
@@ -229,12 +215,14 @@ G4VPhysicalVolume* DetectorConstruction::DefineVolumes()
       sprintf(nameHolder, "HCalActive%d%d", i, j);
       G4VSolid* HCalActiveS = new G4Box("HCalActive", (HCal_X - HCal_WLS_X)/2, (HCal_Y - HCal_Steel_Y)/2, ActivePlateThickness/2);
       HCalActiveLV[i][j] = new G4LogicalVolume(HCalActiveS, ActiveMaterial, nameHolder);
-      new G4PVPlacement(0, G4ThreeVector(0., 0., AbsorberPlateThickness/2), HCalActiveLV[i][j], "HCalActive", HCalLayerLV[i][j], false, i+j, fCheckOverlaps);
+      new G4PVPlacement(0, G4ThreeVector(0., 0., AbsorberPlateThickness/2), HCalActiveLV[i][j], nameHolder, HCalLayerLV[i][j], false, i+j, fCheckOverlaps);
     }
   }
 
-  // Wavelength shifting plates in HCal towers
+  // Wavelength shifting plates in HCal towers 
 
+  // Only in between towers. Implemented as being part of towers rather than separarte. In right side of towers. 
+  // Far right tower section does not have WLS plates.
   G4LogicalVolume* HCalWLS_LV[fNumHCalTowers-1][fNumHCalTowers];
 
   for(G4int i = 1; i < fNumHCalTowers; i++)
@@ -250,6 +238,8 @@ G4VPhysicalVolume* DetectorConstruction::DefineVolumes()
 
   // Steel plates in HCal towers
 
+  // Only in between towers. Implemented as being part of towers rather than separarte. In top of towers.
+  // Top tower section does not have steel plates.
   G4LogicalVolume* HCalSteelLV[fNumHCalTowers][fNumHCalTowers-1];
 
   for(G4int i = 0; i < fNumHCalTowers; i++)
@@ -275,81 +265,106 @@ G4VPhysicalVolume* DetectorConstruction::DefineVolumes()
       sprintf(nameHolder, "ECal%d%d", i, j);
       G4VSolid* ECalS = new G4Box("ECal", ECal_X/2, ECal_Y/2, ECal_Thickness/2);
       ECalLV[i][j] = new G4LogicalVolume(ECalS, ECalAbsorberMaterial, nameHolder);
-      // Note the following placement will need to be adjusted if clearnace gap != glue width
-      new G4PVPlacement(0, G4ThreeVector((-2.*HCal_X + ECal_X/2 + Clearance_Gap) + i*ECal_X + i*ECal_Glue_XY, (2.*HCal_Y - ECal_Y/2 - Clearance_Gap) - j*ECal_Y - j*ECal_Glue_XY, 0),
+
+      G4double x0 = -2.*HCal_X + ECal_X/2 + Clearance_Gap; // Top right HCal block
+      if(i % 2 != 0) x0 += (ECal_X + ECal_Glue_XY);        // Block to the left of the first block
+      G4double y0 = 2.*HCal_Y - ECal_Y/2 - Clearance_Gap; // Top right HCal block
+      if(j % 2 != 0) y0 -= (ECal_Y + ECal_Glue_XY);       // Block below the first block
+      G4int i_factor = i/2;
+      G4int j_factor = j/2;
+
+      // Placement implemented by taking first two blocks and then skipping down by HCal lengths
+      new G4PVPlacement(0, G4ThreeVector( x0 + i_factor*HCal_X,  y0 - j_factor*HCal_Y, 0),
                ECalLV[i][j], nameHolder, WorldLV, false, 0, fCheckOverlaps);
-      //G4cout<<"("<<i<<", "<<j<<"): "<<"("<<(-2.*HCal_X + ECal_X/2 + Clearance_Gap) + i*ECal_X + i*ECal_Glue_XY<<", "<<(2.*HCal_Y - ECal_Y/2 - Clearance_Gap) - j*ECal_Y - j*ECal_Glue_XY<<")"<<G4endl;
+      // G4cout<<"("<<i<<", "<<j<<"): "<<"("<<x0 + i_factor*HCal_X<<", "<<y0 - j_factor*HCal_Y<<")"<<G4endl;
 
     }
   }
 
-  // Horizontal glue between ECal blocks
+  // Every 2x2 blocks has glue in the middle
 
+  /* Horizontal glue between ECal blocks 
+    □ □
+    g g
+    □ □
+  */
   G4LogicalVolume* ECal_HorizGlueLV[fNumECalBlocks][fNumECalBlocks/2]; 
 
   for(G4int i = 0; i < fNumECalBlocks; i++)
   {
-    for(G4int j = 0; j < fNumECalBlocks-1; j += 2)
+    for(G4int j = 0; j < fNumECalBlocks/2; j ++)
     {
-      sprintf(nameHolder, "ECal_HorizGlue%d%d", i, j/2);
+      sprintf(nameHolder, "ECal_HorizGlue%d%d", i, j);
       G4VSolid* ECal_HorizGlueS = new G4Box("ECal_HorizGlue", ECal_X/2, ECal_Glue_XY/2, ECal_Thickness/2);
-      ECal_HorizGlueLV[i][j/2] = new G4LogicalVolume(ECal_HorizGlueS, ActiveMaterial, nameHolder);
-      new G4PVPlacement(0, G4ThreeVector((-2.*HCal_X + ECal_X/2 + Clearance_Gap) + i*ECal_X + i*ECal_Glue_XY, (2.*HCal_Y - ECal_Y/2 - Clearance_Gap) - 0.5*(ECal_Y+ECal_Glue_XY) - j*ECal_Y - 2*j*ECal_Glue_XY/2. , 0), ECal_HorizGlueLV[i][j/2], nameHolder, WorldLV, false, 0, fCheckOverlaps);
+      ECal_HorizGlueLV[i][j] = new G4LogicalVolume(ECal_HorizGlueS, ActiveMaterial, nameHolder);
+      G4double x0 = -2.*HCal_X + ECal_X/2 + Clearance_Gap;
+      if(i % 2 != 0) x0 += (ECal_X + ECal_Glue_XY);
+      G4double y0 = 2.*HCal_Y - ECal_Y - Clearance_Gap - ECal_Glue_XY/2;
+      G4int i_factor = i/2;
+
+      new G4PVPlacement(0, G4ThreeVector(x0 + i_factor*HCal_X, y0 - j*HCal_Y, 0), ECal_HorizGlueLV[i][j], nameHolder, WorldLV, false, 0, fCheckOverlaps);
     } 
   }
 
-  // Vertical glue between ECal blocks
+    /* Vertical glue between ECal blocks 
+    glue running down middle of 2x2 blocks
+    □ g □
+      g
+    □ g □
+  */
 
   G4LogicalVolume* ECal_VertGlueLV[fNumECalBlocks/2][fNumECalBlocks/2];
 
-  for(G4int i = 0; i < fNumECalBlocks-1; i+=2)
+  for(G4int i = 0; i < fNumECalBlocks/2; i++)
   {
     for(G4int j = 0; j < fNumECalBlocks/2; j++)
     {
-      sprintf(nameHolder, "ECal_VertGlue%d%d", i/2, j);
+      sprintf(nameHolder, "ECal_VertGlue%d%d", i, j);
       G4VSolid* ECal_VertGlueS = new G4Box("ECal_VertGlue", ECal_Glue_XY/2, (2*ECal_Y + ECal_Glue_XY)/2, ECal_Thickness/2);
-      ECal_VertGlueLV[i/2][j] = new G4LogicalVolume(ECal_VertGlueS, ActiveMaterial, nameHolder);
-      new G4PVPlacement(0, G4ThreeVector((-2.*HCal_X + ECal_X/2 + Clearance_Gap) + 0.5*(ECal_X+ECal_Glue_XY) + i*ECal_X + 2*i*ECal_Glue_XY/2, (2.*HCal_Y - ECal_Y/2 - Clearance_Gap) - (2*j + 0.5)*(ECal_Y) -(j + 0.5)*ECal_Glue_XY - j*Clearance_Gap, 0), ECal_VertGlueLV[i/2][j], nameHolder, WorldLV, false, 0, fCheckOverlaps);
+      ECal_VertGlueLV[i][j] = new G4LogicalVolume(ECal_VertGlueS, ActiveMaterial, nameHolder);
+      G4double x0 = -2.*HCal_X + ECal_X + Clearance_Gap + ECal_Glue_XY/2;
+      G4double y0 = 2.*HCal_Y - ECal_Y - Clearance_Gap - ECal_Glue_XY/2;
+
+      new G4PVPlacement(0, G4ThreeVector(x0 + i*HCal_X, y0 - j*HCal_Y, 0), ECal_VertGlueLV[i][j], nameHolder, WorldLV, false, 0, fCheckOverlaps);
     } 
   }
 
   // Fibers
   // Non-sensitive cladding around each fiber
+  // Cladding is 3% the total fiber thickness, i.e. .03*fiber radius
+  // See documentation for exact fiber placement
+
   G4LogicalVolume* ECal_FiberCladdingLV[fNumECalBlocks][fNumECalBlocks];
   G4VSolid* ECal_FiberCladdingS = new G4Tubs("ECal_FiberCladding", ECal_Fiber_r - .03*2.0*ECal_Fiber_r, ECal_Fiber_r, ECal_Thickness/2, 0.0, 360.0*deg);
 
   // Fiber core
   G4LogicalVolume* ECal_FiberLV[fNumECalBlocks][fNumECalBlocks];
   G4VSolid* ECal_FiberS = new G4Tubs("ECal_Fiber", 0.0, ECal_Fiber_r - .03*2.0*ECal_Fiber_r, ECal_Thickness/2, 0.0, 360.0*deg);
-
   
   for(G4int i = 0; i < fNumECalBlocks; i++)
   {
     for(G4int j = 0; j < fNumECalBlocks; j++)
     {
-      sprintf(nameHolder, "ECal_FiberCladding%d%d", i, j);
-      ECal_FiberCladdingLV[i][j] = new G4LogicalVolume(ECal_FiberCladdingS, CladdingMaterial, nameHolder);
-      sprintf(nameHolder, "ECal_Fiber%d%d", i, j);
-      ECal_FiberLV[i][j] = new G4LogicalVolume(ECal_FiberS, ActiveMaterial, nameHolder);
+      
       G4int num_fibers_block = 0;
 
       for(G4int fiber_i = 0; fiber_i < ECal_Fiber_Rows; fiber_i++)
       {
         G4double fiber_xspacing = 0.95865;
-        G4double x0 = ECal_X/2. - 0.23966*mm;;
+        G4double x0 = ECal_X/2. - 0.23966;
         if(fiber_i % 2 != 0) x0 -= fiber_xspacing/2.;
         G4double y0 = (ECal_Y/2. - 0.46) - fiber_i*0.820;
 
         for(G4int fiber_j = 0; fiber_j < ECal_Fiber_Cols; fiber_j++)
         {
-          sprintf(nameHolder, "ECal_FiberCladding%d%d%d%d", i, j, fiber_i, fiber_j);
-          new G4PVPlacement(0, G4ThreeVector(x0 - fiber_j*fiber_xspacing, y0, 0), ECal_FiberCladdingLV[i][j], nameHolder, ECalLV[i][j], false, num_fibers_block, fCheckOverlaps);
-          sprintf(nameHolder, "ECal_Fiber%d%d%d%d", i, j, fiber_i, fiber_j);
-          new G4PVPlacement(0, G4ThreeVector(x0 - fiber_j*fiber_xspacing, y0, 0), ECal_FiberLV[i][j], nameHolder, ECalLV[i][j], false, num_fibers_block, fCheckOverlaps);
+          sprintf(nameHolder, "ECal_FiberCladding%02d%02d%02d%d", i, j, fiber_i, fiber_j);
+          new G4PVPlacement(0, G4ThreeVector(x0 - fiber_j*fiber_xspacing, y0, 0), ECal_FiberCladdingLV[i][j], nameHolder, ECalLV[i][j], false, num_fibers_block, false);
+          sprintf(nameHolder, "ECal_Fiber%02d%02d%02d%02d", i, j, fiber_i, fiber_j);
+          new G4PVPlacement(0, G4ThreeVector(x0 - fiber_j*fiber_xspacing, y0, 0), ECal_FiberLV[i][j], nameHolder, ECalLV[i][j], false, num_fibers_block, false);
           num_fibers_block++;
         }
       }
-      //G4cout<<"Number of fibers in ECal block ("<<i<<", "<<j<<"): "<<num_fibers_block<<G4endl;
+      // G4cout<<"Number of fibers in ECal block ("<<i<<", "<<j<<"): "<<num_fibers_block<<G4endl;
     }
 
   }
@@ -371,12 +386,6 @@ G4VPhysicalVolume* DetectorConstruction::DefineVolumes()
   GreenVisAtt->SetVisibility(true);
   GrayVisAtt->SetVisibility(true);
   CyanVisAtt->SetVisibility(true);
-  // RedVisAtt->SetForceWireframe(true);
-  // BlueVisAtt->SetForceWireframe(true);
-  // GreenVisAtt->SetForceWireframe(true);
-  // GrayVisAtt->SetForceWireframe(true);
-  // CyanVisAtt->SetForceWireframe(true);
-
 
   // Only HCal towers, ECal blocks, ECal glue, and one block's fibers are drawn
   // Change invis to other colors to see them
@@ -425,7 +434,8 @@ G4VPhysicalVolume* DetectorConstruction::DefineVolumes()
       ECalLV[i][j]->SetVisAttributes(BlueVisAtt);
       if(j <4) ECal_HorizGlueLV[i][j]->SetVisAttributes(GreenVisAtt);
       if(i < 4 && j < 4) ECal_VertGlueLV[i][j]->SetVisAttributes(GreenVisAtt);
-      if(i <0  && j < 0)
+
+      if(i < 0)
       {
         ECal_FiberCladdingLV[i][j]->SetVisAttributes(GreenVisAtt);
         ECal_FiberLV[i][j]->SetVisAttributes(RedVisAtt);
@@ -453,6 +463,7 @@ void DetectorConstruction::ConstructSDandField()
   char DetectorNameHolder[200];
 
   CalorimeterSD* HCalSD[fNumHCalTowers][fNumHCalTowers];
+
   for(G4int i = 0; i < fNumHCalTowers; i++)
   {
     for(G4int j = 0; j < fNumHCalTowers; j++)

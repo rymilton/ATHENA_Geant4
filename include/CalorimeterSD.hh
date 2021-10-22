@@ -13,6 +13,7 @@
 
 class G4Step;
 class G4HCofThisEvent;
+class DetectorConstruction;
 
 /// Calorimeter sensitive detector class
 ///
