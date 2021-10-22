@@ -1,14 +1,14 @@
 /process/em/verbose 0
 /process/had/verbose 0
 /vis/verbose 0
-/analysis/setFileName pi+_50GeV
+/analysis/setFileName pi+_1GeV
 
 /run/initialize
 
 /run/setCut .01 mm
 /gps/particle pi+
 /gps/ene/type Mono
-/gps/ene/mono 50 GeV
+/gps/ene/mono 1 GeV
 /gps/pos/type Plane
 /gps/pos/shape Square
 /gps/pos/rot1 1 0 0
@@ -17,11 +17,11 @@
 /gps/pos/halfy 0.25 cm
 /gps/pos/centre 2.5025 2.4747 -8.5. cm 
 # 5 deg
-#/gps/direction 0 .08715574275 .9961946981 
+/gps/direction 0 .08715574275 .9961946981 
 # 20 deg
 #/gps/direction 0 .3420201433 .9396926208 
 # 0 deg
-/gps/direction 0 0 1.0
+#/gps/direction 0 0 1.0
 
 /globalField/setValue 0 0 0 tesla
 /run/beamOn 5000

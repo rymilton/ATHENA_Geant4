@@ -64,7 +64,7 @@ G4bool CalorimeterSD::ProcessHits(G4Step* step,
   if ( step->GetTrack()->GetDefinition()->GetPDGCharge() != 0. ) {  // Only using step length for Birk's formula, which applies only to charged particles
     stepLength = step->GetStepLength();  
   }
-  if ( edep==0. && stepLength == 0. ) return false;      
+  if ( edep==0. && stepLength == 0. ) return true;      
   auto touchable = (step->GetPreStepPoint()->GetTouchable());
   
   auto volume = step->GetPreStepPoint()->GetTouchableHandle()->GetVolume();

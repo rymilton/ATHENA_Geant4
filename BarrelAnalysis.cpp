@@ -92,11 +92,13 @@ void BarrelAnalysis(Double_t energy = 1.0)
     Double_t efficiencyECal = 0.;
     Double_t avg_ECalEdep = 0.;
 
+    Double_t ECalCut = 1.0;
     for(Int_t i = 0; i < num_events; i++)
     {
         Total_tree->GetEntry(i);
-
-        if(ECalEdep < 0.5)
+        
+        h_ECalEdep->Fill(ECalEdep);
+        if(ECalEdep < ECalCut)
         {
             ECalEdep = 0.;
             ECalHits = 0;
@@ -105,7 +107,7 @@ void BarrelAnalysis(Double_t energy = 1.0)
         ECalEdep_array[ECaleventID] = ECalEdep;
         ECalHitsArray[ECaleventID] = ECalHits;
         avg_ECalEdep += ECalEdep;
-        h_ECalEdep->Fill(ECalEdep);
+        // h_ECalEdep->Fill(ECalEdep);
     }
 
     for(Int_t i = 0; i < num_events; i++)
@@ -243,7 +245,7 @@ void BarrelAnalysis(Double_t energy = 1.0)
     h_EO1220Hits->GetXaxis()->SetTitle("Number of hits, even layers in [12,20]");
     h_EO1220Hits->GetYaxis()->SetTitle("Number of Events");
     TString info_text;
-    info_text = Form("Neutron, %0.0f GeV, 5 deg", energy);
+    info_text = Form("Neutron, %0.0f GeV, 5#circ", energy);
     h_EO1220Hits->SetTitle(info_text);
     
     c_LayerHits->cd(2);
@@ -268,9 +270,34 @@ void BarrelAnalysis(Double_t energy = 1.0)
     h_all1220Tiles->GetYaxis()->SetTitle("Number of Events");
 
     TCanvas* c_ECalEdep = new TCanvas("c_ECalEdep", "", 1200, 800);
+
+    c_ECalEdep->SetLogy();
     h_ECalEdep->Draw();
     h_ECalEdep->GetXaxis()->SetTitle("ECal Edep (MeV)");
-    h_ECalEdep->SetTitle(info_text);
+    h_ECalEdep->GetYaxis()->SetTitle("Number of Events (Log)");
+    h_ECalEdep->SetTitle("");
+    h_ECalEdep->SetAxisRange(0, 50, "x");
+    h_ECalEdep->GetXaxis()->SetTickLength(.02);
+    h_ECalEdep->GetXaxis()->SetTitleOffset(1.3);
+    h_ECalEdep->GetYaxis()->SetTickLength(-0.02);
+    h_ECalEdep->GetYaxis()->SetLabelOffset(.02);
+    h_ECalEdep->GetYaxis()->SetTitleOffset(1.5);
+    gStyle->SetOptStat(0);
+    gPad->SetTickx();
+
+    TLatex info_caption;
+    info_caption.SetNDC(kTRUE);
+
+    info_caption.SetTextFont(62);
+    info_caption.SetTextSize(.05);
+    info_caption.DrawLatex(.4, .84, info_text);
+    
+    TLine* l_cut = new TLine(ECalCut, 0.0, ECalCut, 20000);
+    l_cut->SetLineWidth(2);
+    l_cut->SetLineStyle(2);
+    l_cut->SetLineColor(kRed);
+    l_cut->Draw("same");
+
 
     TCanvas* c_LayerAvgs = new TCanvas("c_LayerAvgs", "", 1200, 800);
     c_LayerAvgs->Divide(1,2);
@@ -434,7 +461,6 @@ void BarrelPlot()
 
     for(Int_t i = 1; i < 11; i++)
     {
-        
         efficiencyWholeAll.push_back(efficiencyMap[i]->GetBinContent(1));
         efficiencyWholeEO1232.push_back(efficiencyMap[i]->GetBinContent(2));
         efficiencyWholeAll1220.push_back(efficiencyMap[i]->GetBinContent(3));

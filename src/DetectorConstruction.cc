@@ -122,40 +122,40 @@ G4VPhysicalVolume* DetectorConstruction::DefineVolumes()
      
   // World
   auto WorldS 
-    = new G4Box("World",           // its name
+    = new G4Box("WorldSolid",           // its name
                  worldSizeXY/2, worldSizeXY/2, worldSizeZ/2); // its size
                          
   auto WorldLV
     = new G4LogicalVolume(
                  WorldS,           // its solid
                  DefaultMaterial,  // its material
-                 "World");         // its name
+                 "WorldLogical");         // its name
                                    
   auto worldPV
     = new G4PVPlacement(
                  0,                // no rotation
                  G4ThreeVector(),  // at (0,0,0)
                  WorldLV,          // its logical volume                         
-                 "World",          // its name
+                 "WorldPhysical",          // its name
                  0,                // its mother  volume
                  false,            // no boolean operation
                  0,                // copy number
                  fCheckOverlaps);  // checking overlaps 
 
-
+  char nameHolder[200];
   // HCal
 
   G4LogicalVolume* HCalLV[fNumHCalTowers][fNumHCalTowers];
+  G4VSolid* HCalS = new G4Box("HCalSolid", HCal_X/2, HCal_Y/2, HCal_Thickness/2);
 
-  char nameHolder[200];
   for(G4int i = 0; i < fNumHCalTowers; i++)
   {
     for(G4int j = 0; j < fNumHCalTowers; j++)
     {
-      sprintf(nameHolder, "HCal%d%d", i, j);
-      G4VSolid* HCalS = new G4Box("HCal", HCal_X/2, HCal_Y/2, HCal_Thickness/2);
+      sprintf(nameHolder, "HCalLogical%d%d", i, j);
       HCalLV[i][j] = new G4LogicalVolume(HCalS, DefaultMaterial, nameHolder);
-      new G4PVPlacement(0, G4ThreeVector((-2.5 + i)*HCal_X, (2.5 - j)*HCal_Y, ECal_Thickness/2 + HCal_Thickness/2), HCalLV[i][j], nameHolder, WorldLV, false, 0, fCheckOverlaps);
+      sprintf(nameHolder, "HCalPhysical%d%d", i, j);
+      new G4PVPlacement(0, G4ThreeVector((-2.5 + i)*HCal_X, (2.5 - j)*HCal_Y, ECal_Thickness/2 + HCal_Thickness/2), HCalLV[i][j], nameHolder, WorldLV, false, i+j, fCheckOverlaps);
     }
   }
                                                      
@@ -163,43 +163,45 @@ G4VPhysicalVolume* DetectorConstruction::DefineVolumes()
 
   // LayerHolder is used to easily replicate the layers along Z. Dimensions must account for WLS plates and steel plates
   G4LogicalVolume* HCalLayerHolderLV[fNumHCalTowers][fNumHCalTowers]; 
+  G4VSolid* HCalLayerHolderS = new G4Box("HCalLayerHolderSolid", (HCal_X - HCal_WLS_X)/2, (HCal_Y - HCal_Steel_Y)/2, HCal_Thickness/2);
 
   for(G4int i = 0; i < fNumHCalTowers; i++)
   {
     for(G4int j = 0; j < fNumHCalTowers; j++)
     {
-      sprintf(nameHolder, "HCalLayerHolder%d%d", i, j);
-      G4VSolid* HCalLayerHolderS = new G4Box("HCalLayerHolder", (HCal_X - HCal_WLS_X)/2, (HCal_Y - HCal_Steel_Y)/2, HCal_Thickness/2);
+      sprintf(nameHolder, "HCalLayerHolderLogical%d%d", i, j);
       HCalLayerHolderLV[i][j] = new G4LogicalVolume(HCalLayerHolderS, DefaultMaterial, nameHolder);
+      sprintf(nameHolder, "HCalLayerHolderPhysical%d%d", i, j);
       new G4PVPlacement(0, G4ThreeVector(HCal_WLS_X/2, -HCal_Steel_Y/2, 0), HCalLayerHolderLV[i][j], nameHolder, HCalLV[i][j], false, 0, fCheckOverlaps);
     }
   }
 
   G4LogicalVolume* HCalLayerLV[fNumHCalTowers][fNumHCalTowers];
+  G4VSolid* HCalLayerS = new G4Box("HCalLayerSolid", (HCal_X - HCal_WLS_X)/2, (HCal_Y - HCal_Steel_Y)/2, HCal_LayerThickness/2);
 
   for(G4int i = 0; i < fNumHCalTowers; i++)
   {
     for(G4int j = 0; j < fNumHCalTowers; j++)
     {
-      sprintf(nameHolder, "HCalLayer%d%d", i, j);
-      G4VSolid* HCalLayerS = new G4Box("HCalLayer", (HCal_X - HCal_WLS_X)/2, (HCal_Y - HCal_Steel_Y)/2, HCal_LayerThickness/2);
+      sprintf(nameHolder, "HCalLayerLogical%d%d", i, j);
       HCalLayerLV[i][j] = new G4LogicalVolume(HCalLayerS, DefaultMaterial, nameHolder);
-      new G4PVReplica("HCalLayer", HCalLayerLV[i][j], HCalLayerHolderLV[i][j], kZAxis, fNumHCalLayers, HCal_LayerThickness);
+      new G4PVReplica("HCalLayerPhysical", HCalLayerLV[i][j], HCalLayerHolderLV[i][j], kZAxis, fNumHCalLayers, HCal_LayerThickness);
     }
   }
   
   // Absorber plates in HCal towers
   
   G4LogicalVolume* HCalAbsorberLV[fNumHCalTowers][fNumHCalTowers];
+  G4VSolid* HCalAbsorberS = new G4Box("HCalAbsorberSolid", (HCal_X - HCal_WLS_X)/2, (HCal_Y - HCal_Steel_Y)/2, AbsorberPlateThickness/2);
 
   for(G4int i = 0; i < fNumHCalTowers; i++)
   {
     for(G4int j = 0; j < fNumHCalTowers; j++)
     {
-      sprintf(nameHolder, "HCalAbsorber%d%d", i, j);
-      G4VSolid* HCalAbsorberS = new G4Box("HCalAbsorber", (HCal_X - HCal_WLS_X)/2, (HCal_Y - HCal_Steel_Y)/2, AbsorberPlateThickness/2);
+      sprintf(nameHolder, "HCalAbsorberLogical%d%d", i, j);
       HCalAbsorberLV[i][j] = new G4LogicalVolume(HCalAbsorberS, AbsorberPlateMaterial, nameHolder);
-      new G4PVPlacement(0, G4ThreeVector(0., 0., -ActivePlateThickness/2), HCalAbsorberLV[i][j], nameHolder, HCalLayerLV[i][j], false, i+j, fCheckOverlaps);
+      sprintf(nameHolder, "HCalAbsorberPhysical%d%d", i, j);
+      new G4PVPlacement(0, G4ThreeVector(0., 0., -ActivePlateThickness/2), HCalAbsorberLV[i][j], nameHolder, HCalLayerLV[i][j], false, 0, fCheckOverlaps);
     }
   }
 
@@ -207,15 +209,16 @@ G4VPhysicalVolume* DetectorConstruction::DefineVolumes()
 
   // Behind the absorber plates in each layer
   G4LogicalVolume* HCalActiveLV[fNumHCalTowers][fNumHCalTowers];
+  G4VSolid* HCalActiveS = new G4Box("HCalActiveSolid", (HCal_X - HCal_WLS_X)/2, (HCal_Y - HCal_Steel_Y)/2, ActivePlateThickness/2);
 
   for(G4int i = 0; i < fNumHCalTowers; i++)
   {
     for(G4int j = 0; j < fNumHCalTowers; j++)
     {
-      sprintf(nameHolder, "HCalActive%d%d", i, j);
-      G4VSolid* HCalActiveS = new G4Box("HCalActive", (HCal_X - HCal_WLS_X)/2, (HCal_Y - HCal_Steel_Y)/2, ActivePlateThickness/2);
+      sprintf(nameHolder, "HCalActiveLogical%d%d", i, j);
       HCalActiveLV[i][j] = new G4LogicalVolume(HCalActiveS, ActiveMaterial, nameHolder);
-      new G4PVPlacement(0, G4ThreeVector(0., 0., AbsorberPlateThickness/2), HCalActiveLV[i][j], nameHolder, HCalLayerLV[i][j], false, i+j, fCheckOverlaps);
+      sprintf(nameHolder, "HCalActivePhysical%d%d", i, j);
+      new G4PVPlacement(0, G4ThreeVector(0., 0., AbsorberPlateThickness/2), HCalActiveLV[i][j], nameHolder, HCalLayerLV[i][j], false, 0, fCheckOverlaps);
     }
   }
 
@@ -224,14 +227,14 @@ G4VPhysicalVolume* DetectorConstruction::DefineVolumes()
   // Only in between towers. Implemented as being part of towers rather than separarte. In right side of towers. 
   // Far right tower section does not have WLS plates.
   G4LogicalVolume* HCalWLS_LV[fNumHCalTowers-1][fNumHCalTowers];
-
+  G4VSolid* HCalWLS_S = new G4Box("HCalWLSSolid", HCal_WLS_X/2, (HCal_Y - HCal_Steel_Y)/2, HCal_Thickness/2);
   for(G4int i = 1; i < fNumHCalTowers; i++)
   {
     for(G4int j = 0; j < fNumHCalTowers; j++)
     {
-      sprintf(nameHolder, "HCalWLS%d%d", i-1, j);
-      G4VSolid* HCalWLS_S = new G4Box("HCalWLS", HCal_WLS_X/2, (HCal_Y - HCal_Steel_Y)/2, HCal_Thickness/2);
+      sprintf(nameHolder, "HCalWLSLogical%d%d", i-1, j);
       HCalWLS_LV[i-1][j] = new G4LogicalVolume(HCalWLS_S, ActiveMaterial, nameHolder);
+      sprintf(nameHolder, "HCalWLSPhysical%d%d", i-1, j);
       new G4PVPlacement(0, G4ThreeVector(-(HCal_X-HCal_WLS_X)/2, -HCal_Steel_Y/2, 0), HCalWLS_LV[i-1][j], nameHolder, HCalLV[i][j], false, 0, fCheckOverlaps);
     }
   }
@@ -241,14 +244,14 @@ G4VPhysicalVolume* DetectorConstruction::DefineVolumes()
   // Only in between towers. Implemented as being part of towers rather than separarte. In top of towers.
   // Top tower section does not have steel plates.
   G4LogicalVolume* HCalSteelLV[fNumHCalTowers][fNumHCalTowers-1];
-
+  G4VSolid* HCalSteelS = new G4Box("HCalSteelSolid", HCal_X/2, HCal_Steel_Y/2, HCal_Thickness/2); // Plates that stretch across HCal in x and z directions
   for(G4int i = 0; i < fNumHCalTowers; i++)
   {
     for(G4int j = 1; j < fNumHCalTowers; j++)
     {
-      sprintf(nameHolder, "HCalSteel%d%d", i, j-1);
-      G4VSolid* HCalSteelS = new G4Box("HCalSteel", HCal_X/2, HCal_Steel_Y/2, HCal_Thickness/2); // Plates that stretch across HCal in x and z directions
+      sprintf(nameHolder, "HCalSteelLogical%d%d", i, j-1);
       HCalSteelLV[i][j-1] = new G4LogicalVolume(HCalSteelS, AbsorberPlateMaterial, nameHolder);
+      sprintf(nameHolder, "HCalSteelPhysical%d%d", i, j-1);
       new G4PVPlacement(0, G4ThreeVector(0, (HCal_Y-HCal_Steel_Y)/2 , 0), HCalSteelLV[i][j-1], nameHolder, HCalLV[i][j], false, 0, fCheckOverlaps);
     }
   }
@@ -257,13 +260,13 @@ G4VPhysicalVolume* DetectorConstruction::DefineVolumes()
   // ECal Blocks
   // First ECal block has origin at ((-2.*HCal_X + ECal_X/2 + Clearance_Gap), (2.*HCal_Y - ECal_Y/2 - Clearance_Gap)), which is top right HCal block shifted by clearance gap
   G4LogicalVolume* ECalLV[fNumECalBlocks][fNumECalBlocks];
+  G4VSolid* ECalS = new G4Box("ECalSolid", ECal_X/2, ECal_Y/2, ECal_Thickness/2);
 
   for(G4int i = 0; i < fNumECalBlocks; i++)
   {
     for(G4int j = 0; j < fNumECalBlocks; j++)
     {
-      sprintf(nameHolder, "ECal%d%d", i, j);
-      G4VSolid* ECalS = new G4Box("ECal", ECal_X/2, ECal_Y/2, ECal_Thickness/2);
+      sprintf(nameHolder, "ECalLogical%d%d", i, j);
       ECalLV[i][j] = new G4LogicalVolume(ECalS, ECalAbsorberMaterial, nameHolder);
 
       G4double x0 = -2.*HCal_X + ECal_X/2 + Clearance_Gap; // Top right HCal block
@@ -272,7 +275,7 @@ G4VPhysicalVolume* DetectorConstruction::DefineVolumes()
       if(j % 2 != 0) y0 -= (ECal_Y + ECal_Glue_XY);       // Block below the first block
       G4int i_factor = i/2;
       G4int j_factor = j/2;
-
+      sprintf(nameHolder, "ECalPhysical%d%d", i, j);
       // Placement implemented by taking first two blocks and then skipping down by HCal lengths
       new G4PVPlacement(0, G4ThreeVector( x0 + i_factor*HCal_X,  y0 - j_factor*HCal_Y, 0),
                ECalLV[i][j], nameHolder, WorldLV, false, 0, fCheckOverlaps);
@@ -289,19 +292,19 @@ G4VPhysicalVolume* DetectorConstruction::DefineVolumes()
     □ □
   */
   G4LogicalVolume* ECal_HorizGlueLV[fNumECalBlocks][fNumECalBlocks/2]; 
+  G4VSolid* ECal_HorizGlueS = new G4Box("ECal_HorizGlueSolid", ECal_X/2, ECal_Glue_XY/2, ECal_Thickness/2);
 
   for(G4int i = 0; i < fNumECalBlocks; i++)
   {
     for(G4int j = 0; j < fNumECalBlocks/2; j ++)
     {
-      sprintf(nameHolder, "ECal_HorizGlue%d%d", i, j);
-      G4VSolid* ECal_HorizGlueS = new G4Box("ECal_HorizGlue", ECal_X/2, ECal_Glue_XY/2, ECal_Thickness/2);
+      sprintf(nameHolder, "ECal_HorizGlueLogical%d%d", i, j);
       ECal_HorizGlueLV[i][j] = new G4LogicalVolume(ECal_HorizGlueS, ActiveMaterial, nameHolder);
       G4double x0 = -2.*HCal_X + ECal_X/2 + Clearance_Gap;
       if(i % 2 != 0) x0 += (ECal_X + ECal_Glue_XY);
       G4double y0 = 2.*HCal_Y - ECal_Y - Clearance_Gap - ECal_Glue_XY/2;
       G4int i_factor = i/2;
-
+      sprintf(nameHolder, "ECal_HorizGluePhysical%d%d", i, j);
       new G4PVPlacement(0, G4ThreeVector(x0 + i_factor*HCal_X, y0 - j*HCal_Y, 0), ECal_HorizGlueLV[i][j], nameHolder, WorldLV, false, 0, fCheckOverlaps);
     } 
   }
@@ -314,17 +317,17 @@ G4VPhysicalVolume* DetectorConstruction::DefineVolumes()
   */
 
   G4LogicalVolume* ECal_VertGlueLV[fNumECalBlocks/2][fNumECalBlocks/2];
+  G4VSolid* ECal_VertGlueS = new G4Box("ECal_VertGlue", ECal_Glue_XY/2, (2*ECal_Y + ECal_Glue_XY)/2, ECal_Thickness/2);
 
   for(G4int i = 0; i < fNumECalBlocks/2; i++)
   {
     for(G4int j = 0; j < fNumECalBlocks/2; j++)
     {
-      sprintf(nameHolder, "ECal_VertGlue%d%d", i, j);
-      G4VSolid* ECal_VertGlueS = new G4Box("ECal_VertGlue", ECal_Glue_XY/2, (2*ECal_Y + ECal_Glue_XY)/2, ECal_Thickness/2);
+      sprintf(nameHolder, "ECal_VertGlueLogical%d%d", i, j);
       ECal_VertGlueLV[i][j] = new G4LogicalVolume(ECal_VertGlueS, ActiveMaterial, nameHolder);
       G4double x0 = -2.*HCal_X + ECal_X + Clearance_Gap + ECal_Glue_XY/2;
       G4double y0 = 2.*HCal_Y - ECal_Y - Clearance_Gap - ECal_Glue_XY/2;
-
+      sprintf(nameHolder, "ECal_VertGluePhysical%d%d", i, j);
       new G4PVPlacement(0, G4ThreeVector(x0 + i*HCal_X, y0 - j*HCal_Y, 0), ECal_VertGlueLV[i][j], nameHolder, WorldLV, false, 0, fCheckOverlaps);
     } 
   }
@@ -335,19 +338,19 @@ G4VPhysicalVolume* DetectorConstruction::DefineVolumes()
   // See documentation for exact fiber placement
 
   G4LogicalVolume* ECal_FiberCladdingLV[fNumECalBlocks][fNumECalBlocks];
-  G4VSolid* ECal_FiberCladdingS = new G4Tubs("ECal_FiberCladding", ECal_Fiber_r - .03*2.0*ECal_Fiber_r, ECal_Fiber_r, ECal_Thickness/2, 0.0, 360.0*deg);
+  G4VSolid* ECal_FiberCladdingS = new G4Tubs("ECal_FiberCladdingSolid", ECal_Fiber_r - .03*2.0*ECal_Fiber_r, ECal_Fiber_r, ECal_Thickness/2, 0.0, 360.0*deg);
 
   // Fiber core
   G4LogicalVolume* ECal_FiberLV[fNumECalBlocks][fNumECalBlocks];
-  G4VSolid* ECal_FiberS = new G4Tubs("ECal_Fiber", 0.0, ECal_Fiber_r - .03*2.0*ECal_Fiber_r, ECal_Thickness/2, 0.0, 360.0*deg);
+  G4VSolid* ECal_FiberS = new G4Tubs("ECal_FiberSolid", 0.0, ECal_Fiber_r - .03*2.0*ECal_Fiber_r, ECal_Thickness/2, 0.0, 360.0*deg);
   
   for(G4int i = 0; i < fNumECalBlocks; i++)
   {
     for(G4int j = 0; j < fNumECalBlocks; j++)
     {
-      sprintf(nameHolder, "ECal_FiberCladding%d%d", i, j);
+      sprintf(nameHolder, "ECal_FiberCladdingLogical%d%d", i, j);
       ECal_FiberCladdingLV[i][j] = new G4LogicalVolume(ECal_FiberCladdingS, ActiveMaterial, nameHolder);
-      sprintf(nameHolder, "ECal_Fiber%d%d", i, j);
+      sprintf(nameHolder, "ECal_FiberLogical%d%d", i, j);
       ECal_FiberLV[i][j] = new G4LogicalVolume(ECal_FiberS, ActiveMaterial, nameHolder);
       G4int num_fibers_block = 0;
 
@@ -360,11 +363,11 @@ G4VPhysicalVolume* DetectorConstruction::DefineVolumes()
 
         for(G4int fiber_j = 0; fiber_j < ECal_Fiber_Cols; fiber_j++)
         {
-          sprintf(nameHolder, "ECal_FiberCladding%02d%02d%02d%d", i, j, fiber_i, fiber_j);
-          new G4PVPlacement(0, G4ThreeVector(x0 - fiber_j*fiber_xspacing, y0, 0), ECal_FiberCladdingLV[i][j], nameHolder, ECalLV[i][j], false, num_fibers_block, false);
+          sprintf(nameHolder, "ECal_FiberCladdingPhysical%02d%02d%02d%d", i, j, fiber_i, fiber_j);
+          new G4PVPlacement(0, G4ThreeVector(x0 - fiber_j*fiber_xspacing, y0, 0), ECal_FiberCladdingLV[i][j], nameHolder, ECalLV[i][j], false, 0, false);
 
-          sprintf(nameHolder, "ECal_Fiber%02d%02d%02d%02d", i, j, fiber_i, fiber_j);
-          new G4PVPlacement(0, G4ThreeVector(x0 - fiber_j*fiber_xspacing, y0, 0), ECal_FiberLV[i][j], nameHolder, ECalLV[i][j], false, num_fibers_block, false);
+          sprintf(nameHolder, "ECal_FiberPhysical%02d%02d%02d%02d", i, j, fiber_i, fiber_j);
+          new G4PVPlacement(0, G4ThreeVector(x0 - fiber_j*fiber_xspacing, y0, 0), ECal_FiberLV[i][j], nameHolder, ECalLV[i][j], false, 0, false);
           num_fibers_block++;
         }
       }
@@ -474,7 +477,7 @@ void DetectorConstruction::ConstructSDandField()
     {
       sprintf(SDNameHolder, "HCalSD%d%d", i, j);
       sprintf(HitsNameHolder, "HCalHitsCollection%d%d", i, j);
-      sprintf(DetectorNameHolder, "HCalActive%d%d", i, j);
+      sprintf(DetectorNameHolder, "HCalActiveLogical%d%d", i, j);
 
       HCalSD[i][j] = new CalorimeterSD(SDNameHolder, HitsNameHolder, fNumHCalLayers);
       G4SDManager::GetSDMpointer()->AddNewDetector(HCalSD[i][j]);
@@ -489,7 +492,7 @@ void DetectorConstruction::ConstructSDandField()
     {
       sprintf(SDNameHolder, "ECalSD%d%d", i, j);
       sprintf(HitsNameHolder, "ECalHitsCollection%d%d", i, j);
-      sprintf(DetectorNameHolder, "ECal_Fiber%d%d", i, j);
+      sprintf(DetectorNameHolder, "ECal_FiberLogical%d%d", i, j);
 
       ECalSD[i][j] = new CalorimeterSD(SDNameHolder, HitsNameHolder, 1);
       G4SDManager::GetSDMpointer()->AddNewDetector(ECalSD[i][j]);

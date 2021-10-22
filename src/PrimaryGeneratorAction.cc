@@ -43,7 +43,7 @@ void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent)
   // This function is called at the begining of event
 
   G4double worldZHalfLength = 0.;
-  auto worldLV = G4LogicalVolumeStore::GetInstance()->GetVolume("World");
+  auto worldLV = G4LogicalVolumeStore::GetInstance()->GetVolume("WorldLogical");
 
   // Check that the world volume has box shape
   G4Box* worldBox = nullptr;
