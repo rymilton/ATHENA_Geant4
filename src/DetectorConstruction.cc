@@ -345,7 +345,10 @@ G4VPhysicalVolume* DetectorConstruction::DefineVolumes()
   {
     for(G4int j = 0; j < fNumECalBlocks; j++)
     {
-      
+      sprintf(nameHolder, "ECal_FiberCladding%d%d", i, j);
+      ECal_FiberCladdingLV[i][j] = new G4LogicalVolume(ECal_FiberCladdingS, ActiveMaterial, nameHolder);
+      sprintf(nameHolder, "ECal_Fiber%d%d", i, j);
+      ECal_FiberLV[i][j] = new G4LogicalVolume(ECal_FiberS, ActiveMaterial, nameHolder);
       G4int num_fibers_block = 0;
 
       for(G4int fiber_i = 0; fiber_i < ECal_Fiber_Rows; fiber_i++)
@@ -359,6 +362,7 @@ G4VPhysicalVolume* DetectorConstruction::DefineVolumes()
         {
           sprintf(nameHolder, "ECal_FiberCladding%02d%02d%02d%d", i, j, fiber_i, fiber_j);
           new G4PVPlacement(0, G4ThreeVector(x0 - fiber_j*fiber_xspacing, y0, 0), ECal_FiberCladdingLV[i][j], nameHolder, ECalLV[i][j], false, num_fibers_block, false);
+
           sprintf(nameHolder, "ECal_Fiber%02d%02d%02d%02d", i, j, fiber_i, fiber_j);
           new G4PVPlacement(0, G4ThreeVector(x0 - fiber_j*fiber_xspacing, y0, 0), ECal_FiberLV[i][j], nameHolder, ECalLV[i][j], false, num_fibers_block, false);
           num_fibers_block++;
@@ -435,7 +439,7 @@ G4VPhysicalVolume* DetectorConstruction::DefineVolumes()
       if(j <4) ECal_HorizGlueLV[i][j]->SetVisAttributes(GreenVisAtt);
       if(i < 4 && j < 4) ECal_VertGlueLV[i][j]->SetVisAttributes(GreenVisAtt);
 
-      if(i < 0)
+      if(i == 1 && j == 1)
       {
         ECal_FiberCladdingLV[i][j]->SetVisAttributes(GreenVisAtt);
         ECal_FiberLV[i][j]->SetVisAttributes(RedVisAtt);
