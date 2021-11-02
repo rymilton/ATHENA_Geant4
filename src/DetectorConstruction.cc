@@ -110,7 +110,7 @@ G4VPhysicalVolume* DetectorConstruction::DefineVolumes()
 
   G4MaterialPropertiesTable* MaterialTable = new G4MaterialPropertiesTable();
   ActiveMaterial->SetMaterialPropertiesTable(MaterialTable);
-  ActiveMaterial->GetIonisation()->SetBirksConstant(.126*mm/MeV);
+  ActiveMaterial->GetIonisation()->SetBirksConstant(0.126*mm/MeV);
   
   if ( !DefaultMaterial || !AbsorberPlateMaterial || !ActiveMaterial || !CladdingMaterial || !ECalAbsorberMaterial ) 
   {
@@ -224,8 +224,8 @@ G4VPhysicalVolume* DetectorConstruction::DefineVolumes()
 
   // Wavelength shifting plates in HCal towers 
 
-  // Only in between towers. Implemented as being part of towers rather than separarte. In right side of towers. 
-  // Far right tower section does not have WLS plates.
+  //Only in between towers. Implemented as being part of towers rather than separarte. In right side of towers. 
+  //Far right tower section does not have WLS plates.
   G4LogicalVolume* HCalWLS_LV[fNumHCalTowers-1][fNumHCalTowers];
   G4VSolid* HCalWLS_S = new G4Box("HCalWLSSolid", HCal_WLS_X/2, (HCal_Y - HCal_Steel_Y)/2, HCal_Thickness/2);
   for(G4int i = 1; i < fNumHCalTowers; i++)
@@ -371,7 +371,7 @@ G4VPhysicalVolume* DetectorConstruction::DefineVolumes()
           num_fibers_block++;
         }
       }
-      // G4cout<<"Number of fibers in ECal block ("<<i<<", "<<j<<"): "<<num_fibers_block<<G4endl;
+      G4cout<<"Number of fibers in ECal block ("<<i<<", "<<j<<"): "<<num_fibers_block<<G4endl;
     }
 
   }
@@ -387,6 +387,7 @@ G4VPhysicalVolume* DetectorConstruction::DefineVolumes()
   G4VisAttributes* GreenVisAtt = new G4VisAttributes(G4Colour::Green());
   G4VisAttributes* GrayVisAtt= new G4VisAttributes(G4Colour(0.5,0.5,0.5));//gray
   G4VisAttributes* CyanVisAtt = new G4VisAttributes(G4Colour::Cyan());
+  G4VisAttributes* MagentaVisAtt = new G4VisAttributes(G4Colour::Magenta());
   
   RedVisAtt->SetVisibility(true);
   BlueVisAtt->SetVisibility(true);
@@ -404,32 +405,32 @@ G4VPhysicalVolume* DetectorConstruction::DefineVolumes()
         HCalLV[i][j]->SetVisAttributes(RedVisAtt);
         HCalLayerHolderLV[i][j]->SetVisAttributes(GrayVisAtt);
     
-        if( i == 0 && j == 0) 
-        {
+        // if( i == 0 && j == 0) 
+        // {
+        //   HCalActiveLV[i][j]->SetVisAttributes(invis);
+        //   HCalAbsorberLV[i][j]->SetVisAttributes(invis);
+        //   HCalLayerLV[i][j]->SetVisAttributes(invis);
+        // }
+        // else if( i == 0 && j == 1)
+        // {
+        //   HCalActiveLV[i][j]->SetVisAttributes(invis);
+        //   HCalAbsorberLV[i][j]->SetVisAttributes(invis);
+        //   HCalLayerLV[i][j]->SetVisAttributes(invis);
+        // }
+        // else if (i == 0 && j == 2)
+        // {
+        //   HCalActiveLV[i][j]->SetVisAttributes(invis);
+        //   HCalAbsorberLV[i][j]->SetVisAttributes(invis);
+        //   HCalLayerLV[i][j]->SetVisAttributes(invis);
+        // }
+        // else
+        // {
           HCalActiveLV[i][j]->SetVisAttributes(invis);
           HCalAbsorberLV[i][j]->SetVisAttributes(invis);
           HCalLayerLV[i][j]->SetVisAttributes(invis);
-        }
-        else if( i == 0 && j == 1)
-        {
-          HCalActiveLV[i][j]->SetVisAttributes(invis);
-          HCalAbsorberLV[i][j]->SetVisAttributes(invis);
-          HCalLayerLV[i][j]->SetVisAttributes(invis);
-        }
-        else if (i == 0 && j == 2)
-        {
-          HCalActiveLV[i][j]->SetVisAttributes(invis);
-          HCalAbsorberLV[i][j]->SetVisAttributes(invis);
-          HCalLayerLV[i][j]->SetVisAttributes(invis);
-        }
-        else
-        {
-          HCalActiveLV[i][j]->SetVisAttributes(invis);
-          HCalAbsorberLV[i][j]->SetVisAttributes(invis);
-          HCalLayerLV[i][j]->SetVisAttributes(invis);
-        }
-        if(i != fNumHCalTowers-1) HCalWLS_LV[i][j]->SetVisAttributes(invis);
-        if(j != fNumHCalTowers - 1) HCalSteelLV[i][j]->SetVisAttributes(invis);
+        //}
+        if(i != fNumHCalTowers-1) HCalWLS_LV[i][j]->SetVisAttributes(CyanVisAtt);
+        if(j != fNumHCalTowers - 1) HCalSteelLV[i][j]->SetVisAttributes(MagentaVisAtt);
       }
       
   }
@@ -444,8 +445,8 @@ G4VPhysicalVolume* DetectorConstruction::DefineVolumes()
 
       if(i == 1 && j == 1)
       {
-        ECal_FiberCladdingLV[i][j]->SetVisAttributes(GreenVisAtt);
-        ECal_FiberLV[i][j]->SetVisAttributes(RedVisAtt);
+        ECal_FiberCladdingLV[i][j]->SetVisAttributes(invis);
+        ECal_FiberLV[i][j]->SetVisAttributes(invis);
       }
       else
       {
