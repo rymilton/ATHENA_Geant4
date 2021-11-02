@@ -66,7 +66,7 @@ void BarrelAnalysis(Double_t energy = 1.0)
     TH1I* h_all1220Tiles = new TH1I("h_all1220Tiles", "", 100, 0, 100);
     TH1D* h_ECalEdep = new TH1D("h_ECalEdep", "", 200, 0, 100);
 
-    TH1D* h_efficiency = new TH1D("h_efficiency", " ", 9, 0.5, 9.5);
+    TH1D* h_efficiency = new TH1D("h_efficiency", " ", 10, 0.5, 10.5);
 
     Double_t ECalEdep_array[num_events];
     Double_t HCalEdep_array[num_events];
@@ -83,6 +83,7 @@ void BarrelAnalysis(Double_t energy = 1.0)
     Double_t efficiencyWholeEO1220 = 0.;
     Double_t efficiencyWholeAllLayers = 0.;
     Double_t efficiencyWholeEO1232 = 0.;
+    Double_t efficiencyWholeDead = 0.;
 
     Double_t efficiencyHCalAll1220 = 0.;
     Double_t efficiencyHCalEO1220 = 0.;
@@ -116,6 +117,7 @@ void BarrelAnalysis(Double_t energy = 1.0)
         Int_t total1220Hits = 0;
         Int_t EO1232Hits = 0;
         Int_t totalHits = 0;
+        Int_t totalwithDeadHits = 0;
         Double_t EO1220Tiles = 0;
         Double_t total1220Tiles = 0;
         Double_t HCalEventEdep = 0.;
@@ -134,13 +136,14 @@ void BarrelAnalysis(Double_t energy = 1.0)
         for(Int_t itile = 0; itile < 36*num_total_layers; itile++)
         {
             HCal_tree->GetEntry(itile + i*36*num_total_layers);
-            if(layerid < 11) continue;
 
             if(HCalTileEdep < 0.1)
             {
                 HCalTileHits = 0;
                 HCalTileEdep = 0.;
             }
+            totalwithDeadHits += HCalTileHits;
+            if(layerid < 11) continue;  
 
             totalHits += HCalTileHits;
             if(layerid == 21 || layerid == 23 || layerid == 25 || layerid == 27 || layerid == 29 || layerid == 31)
@@ -180,6 +183,7 @@ void BarrelAnalysis(Double_t energy = 1.0)
         if(ECalHitsArray[HCaleventID] == 0) ECalHit = kFALSE;
         else ECalHit = kTRUE;
 
+        if(totalwithDeadHits != 0 || ECalHit) efficiencyWholeDead++;
         if(totalHits != 0 || ECalHit) efficiencyWholeAllLayers++;
         if(EO1232Hits != 0 || ECalHit) efficiencyWholeEO1232++;
         if(total1220Hits != 0 || ECalHit) efficiencyWholeAll1220++;
@@ -217,6 +221,9 @@ void BarrelAnalysis(Double_t energy = 1.0)
     efficiencyHCalEO1232 *= 100;
     efficiencyECal /= num_events;
     efficiencyECal *= 100;
+    efficiencyWholeDead /= num_events;
+    efficiencyWholeDead *= 100;
+    
 
     h_efficiency->SetBinContent(1, efficiencyWholeAllLayers);
     h_efficiency->SetBinContent(2, efficiencyWholeEO1232);
@@ -227,6 +234,7 @@ void BarrelAnalysis(Double_t energy = 1.0)
     h_efficiency->SetBinContent(7, efficiencyHCalAll1220);
     h_efficiency->SetBinContent(8, efficiencyHCalEO1220);
     h_efficiency->SetBinContent(9, efficiencyECal);
+    h_efficiency->SetBinContent(10, efficiencyWholeDead);
 
 
     TCanvas* c_LayerEdep = new TCanvas("c_LayerEdep", "", 1000, 1000);
@@ -397,6 +405,17 @@ void BarrelPlot()
     TH1D* neutron9GeV_efficiency;
     TH1D* neutron10GeV_efficiency;
 
+    TH1I* h_neutron1GeV_TileHits;
+    TH1I* h_neutron2GeV_TileHits;
+    TH1I* h_neutron3GeV_TileHits;
+    TH1I* h_neutron4GeV_TileHits;
+    TH1I* h_neutron5GeV_TileHits;
+    TH1I* h_neutron6GeV_TileHits;
+    TH1I* h_neutron7GeV_TileHits;
+    TH1I* h_neutron8GeV_TileHits;
+    TH1I* h_neutron9GeV_TileHits;
+    TH1I* h_neutron10GeV_TileHits;
+
     neutron1GeV_file->GetObject("p_layerEdep", neutron1GeV_edep);
     neutron2GeV_file->GetObject("p_layerEdep", neutron2GeV_edep);
     neutron3GeV_file->GetObject("p_layerEdep", neutron3GeV_edep);
@@ -441,6 +460,17 @@ void BarrelPlot()
     neutron9GeV_file->GetObject("h_efficiency", neutron9GeV_efficiency);
     neutron10GeV_file->GetObject("h_efficiency", neutron10GeV_efficiency);
 
+    neutron1GeV_file->GetObject("h_EO1220Tile", h_neutron1GeV_TileHits);
+    neutron2GeV_file->GetObject("h_EO1220Tile", h_neutron2GeV_TileHits);
+    neutron3GeV_file->GetObject("h_EO1220Tile", h_neutron3GeV_TileHits);
+    neutron4GeV_file->GetObject("h_EO1220Tile", h_neutron4GeV_TileHits);
+    neutron5GeV_file->GetObject("h_EO1220Tile", h_neutron5GeV_TileHits);
+    neutron6GeV_file->GetObject("h_EO1220Tile", h_neutron6GeV_TileHits);
+    neutron7GeV_file->GetObject("h_EO1220Tile", h_neutron7GeV_TileHits);
+    neutron8GeV_file->GetObject("h_EO1220Tile", h_neutron8GeV_TileHits);
+    neutron9GeV_file->GetObject("h_EO1220Tile", h_neutron9GeV_TileHits);
+    neutron10GeV_file->GetObject("h_EO1220Tile", h_neutron10GeV_TileHits);
+
     
 
     Double_t energy[10] = {1., 2., 3., 4., 5., 6., 7., 8., 9., 10.};
@@ -453,6 +483,7 @@ void BarrelPlot()
     std::vector<Double_t> efficiencyHCalAll1220;
     std::vector<Double_t> efficiencyHCalEO1220;
     std::vector<Double_t> efficiencyECal;
+    std::vector<Double_t> efficiencywithoutDead;
 
 
     std::map<Int_t, TH1D*> efficiencyMap = {{1, neutron1GeV_efficiency}, {2, neutron2GeV_efficiency}, {3, neutron3GeV_efficiency}, {4, neutron4GeV_efficiency}, {5, neutron5GeV_efficiency},
@@ -470,6 +501,7 @@ void BarrelPlot()
         efficiencyHCalAll1220.push_back(efficiencyMap[i]->GetBinContent(7));
         efficiencyHCalEO1220.push_back(efficiencyMap[i]->GetBinContent(8));
         efficiencyECal.push_back(efficiencyMap[i]->GetBinContent(9));
+        efficiencywithoutDead.push_back(efficiencyMap[i]->GetBinContent(10));
     }
 
     
@@ -483,6 +515,7 @@ void BarrelPlot()
     TGraph* gr_efficiencyWholeEO1232 = new TGraph(10, energy, efficiencyWholeEO1232.data());
     TGraph* gr_efficiencyWholeAll1220 = new TGraph(10, energy, efficiencyWholeAll1220.data());
     TGraph* gr_efficiencyWholeEO1220 = new TGraph(10, energy, efficiencyWholeEO1220.data());
+    TGraph* gr_efficiencywithoutDead = new TGraph(10, energy, efficiencywithoutDead.data());
     
 
 
@@ -501,12 +534,12 @@ void BarrelPlot()
     gr_ECalEdep->GetXaxis()->SetLimits(0, 11.);
     gr_ECalEdep->GetXaxis()->SetNdivisions(308);
     TString info_text;
-    info_text = Form("Barrel Calorimeter: Neutrons 5#circ, ECal 0.5 MeV Cut");
+    info_text = Form("ECal before cut");
     TLatex info_caption;
     info_caption.SetTextFont(62);
     info_caption.SetTextSize(.04);
     info_caption.SetNDC(kTRUE);
-    info_caption.DrawLatex(.33, .84, info_text);
+    info_caption.DrawLatex(.43, .84, info_text);
     gPad->SetTicks();
 
 
@@ -514,6 +547,7 @@ void BarrelPlot()
     mg_efficiency->Add(gr_efficiencyWholeEO1232);
     mg_efficiency->Add(gr_efficiencyWholeAll1220);
     mg_efficiency->Add(gr_efficiencyWholeEO1220);
+    mg_efficiency->Add(gr_efficiencywithoutDead);
     
     
 
@@ -524,13 +558,16 @@ void BarrelPlot()
     mg_efficiency->GetXaxis()->SetTitle("Beam Energy (GeV)");
     mg_efficiency->GetYaxis()->SetTitle("Efficiency (%)");
     mg_efficiency->SetMinimum(60.);
-    mg_efficiency->SetMaximum(105);
+    mg_efficiency->SetMaximum(102.5);
     mg_efficiency->GetYaxis()->SetNdivisions(310);
     mg_efficiency->GetXaxis()->SetLimits(0, 11.);
     mg_efficiency->GetXaxis()->SetNdivisions(308);
 
-    gr_efficiencyWholeAll->SetMarkerStyle(kFullCircle);
-    gr_efficiencyWholeAll->SetMarkerColor(kBlack);
+    gr_efficiencywithoutDead->SetMarkerStyle(kFullCircle);
+    gr_efficiencywithoutDead->SetMarkerColor(kBlack);
+
+    gr_efficiencyWholeAll->SetMarkerStyle(kOpenCircle);
+    gr_efficiencyWholeAll->SetMarkerColor(kCyan);
 
     gr_efficiencyWholeAll1220->SetMarkerStyle(kOpenCircle);
     gr_efficiencyWholeAll1220->SetMarkerColor(kBlue);
@@ -541,16 +578,17 @@ void BarrelPlot()
     gr_efficiencyWholeEO1220->SetMarkerStyle(kOpenCircle);
     gr_efficiencyWholeEO1220->SetMarkerColor(kGreen+2);
 
-
-    info_caption.DrawLatex(.25, .14, info_text);
+    info_text = Form("ECal + HCal: ECal 1 MeV Cut, HCal 0.1 MeV Cut");
+    info_caption.DrawLatex(.26, .14, info_text);
     gPad->SetTicks();
 
 
-    TLegend* leg_efficiencies = new TLegend(0.5, 0.45, 0.7, 0.65);
-    leg_efficiencies->AddEntry(gr_efficiencyWholeAll, "All HCal Layers", "p");
-    leg_efficiencies->AddEntry(gr_efficiencyWholeAll1220, "HCal Layers #in [12,20]", "p");
-    leg_efficiencies->AddEntry(gr_efficiencyWholeEO1232, "Even HCal Layers #in [12, 32]", "p");
-    leg_efficiencies->AddEntry(gr_efficiencyWholeEO1220, "Even HCal Layers #in [12, 20]", "p");
+    TLegend* leg_efficiencies = new TLegend(0.45, 0.45, 0.65, 0.65);
+    leg_efficiencies->AddEntry(gr_efficiencywithoutDead, "No dead layers", "p");
+    leg_efficiencies->AddEntry(gr_efficiencyWholeAll, "HCal Layers #in [1,39]", "p");
+    leg_efficiencies->AddEntry(gr_efficiencyWholeAll1220, "HCal Layers #in [1,9]", "p");
+    leg_efficiencies->AddEntry(gr_efficiencyWholeEO1232, "Every Other HCal Layer #in [1, 21]", "p");
+    leg_efficiencies->AddEntry(gr_efficiencyWholeEO1220, "Every Other HCal Layer #in [1, 9]", "p");
     leg_efficiencies->SetTextFont(43);
     leg_efficiencies->SetTextSize(29.76);
     leg_efficiencies->SetBorderSize(0);
@@ -581,12 +619,13 @@ void BarrelPlot()
 
     gr_efficiencyECal->SetMarkerStyle(kOpenCircle);
     gr_efficiencyECal->SetMarkerColor(kBlue);
-
-    info_caption.DrawLatex(.25, .14, info_text);
+    
+    info_text = Form("ECal 1 MeV Cut, HCal 0.1 MeV Cut");
+    info_caption.DrawLatex(.32, .14, info_text);
     gPad->SetTicks();
 
     TLegend* leg_ECalHCalefficiency = new TLegend(0.15, 0.75, 0.25, 0.85);
-    leg_ECalHCalefficiency->AddEntry(gr_efficiencyHCalEO1220, "HCal, Even Layers #in [12,20]", "p");
+    leg_ECalHCalefficiency->AddEntry(gr_efficiencyHCalEO1220, "HCal, Every Other Layer #in [1,9]", "p");
     leg_ECalHCalefficiency->AddEntry(gr_efficiencyECal, "ECal", "p");
     leg_ECalHCalefficiency->SetTextFont(43);
     leg_ECalHCalefficiency->SetTextSize(29.76);
@@ -634,7 +673,7 @@ void BarrelPlot()
     l0->SetLineStyle(2);
     l0->Draw("same");
 
-    TLegend* leg_energies = new TLegend(0.7, 0.45, 0.9, 0.85);
+    TLegend* leg_energies = new TLegend(0.65, 0.45, 0.85, 0.85);
     leg_energies->AddEntry(neutron1GeV_edep, "1 GeV", "p");
     leg_energies->AddEntry(neutron2GeV_edep, "2 GeV", "p");
     leg_energies->AddEntry(neutron3GeV_edep, "3 GeV", "p");
@@ -656,7 +695,7 @@ void BarrelPlot()
 
     neutron1GeV_TileHits->Draw("EX0");
     neutron1GeV_TileHits->SetMarkerColor(kRed);
-    neutron1GeV_TileHits->SetAxisRange(-0.1, 9, "y");
+    neutron1GeV_TileHits->SetAxisRange(-0.1, 3, "y");
 
     neutron2GeV_TileHits->Draw("EX0 same");
     neutron2GeV_TileHits->SetMarkerColor(kBlue);
@@ -689,7 +728,7 @@ void BarrelPlot()
 
     l0->Draw("same");
 
-    TLegend* leg_TileHits = new TLegend(0.7, 0.45, 0.9, 0.85);
+    TLegend* leg_TileHits = new TLegend(0.65, 0.45, 0.85, 0.85);
     leg_TileHits->AddEntry(neutron1GeV_TileHits, "1 GeV", "p");
     leg_TileHits->AddEntry(neutron2GeV_TileHits, "2 GeV", "p");
     leg_TileHits->AddEntry(neutron3GeV_TileHits, "3 GeV", "p");
@@ -710,7 +749,7 @@ void BarrelPlot()
 
     neutron1GeV_numHits->Draw("EX0");
     neutron1GeV_numHits->SetMarkerColor(kRed);
-    neutron1GeV_numHits->SetAxisRange(-1.9, 70, "y");
+    neutron1GeV_numHits->SetAxisRange(-1.9, 60, "y");
 
     neutron2GeV_numHits->Draw("EX0 same");
     neutron2GeV_numHits->SetMarkerColor(kBlue);
@@ -743,7 +782,7 @@ void BarrelPlot()
 
     l0->Draw("same");
 
-    TLegend* leg_numHits = new TLegend(0.7, 0.45, 0.9, 0.85);
+    TLegend* leg_numHits = new TLegend(0.65, 0.45, 0.85, 0.85);
     leg_numHits->AddEntry(neutron1GeV_numHits, "1 GeV", "p");
     leg_numHits->AddEntry(neutron2GeV_numHits, "2 GeV", "p");
     leg_numHits->AddEntry(neutron3GeV_numHits, "3 GeV", "p");
@@ -758,5 +797,62 @@ void BarrelPlot()
     leg_numHits->SetTextSize(29.76);
     leg_numHits->SetBorderSize(0);
     leg_numHits->Draw("same");
+
+
+
+    TCanvas* c_TileHitsHists = new TCanvas("c_TileHitsHists", "", 1200, 800);
+    c_TileHitsHists->SetLogy();
+    h_neutron1GeV_TileHits->Draw();
+    h_neutron1GeV_TileHits->SetLineColor(kRed);
+
+    h_neutron1GeV_TileHits->GetXaxis()->SetTitle("Number of tiles hit, every other layer #in [1,9]");
+    h_neutron1GeV_TileHits->GetYaxis()->SetTitle("Number of events (Log)");
+    h_neutron1GeV_TileHits->SetTitle("");
+    h_neutron1GeV_TileHits->SetAxisRange(0,50, "x");
+    
+
+    h_neutron2GeV_TileHits->Draw("same");
+    h_neutron2GeV_TileHits->SetLineColor(kBlue);
+    
+    h_neutron3GeV_TileHits->Draw("same");
+    h_neutron3GeV_TileHits->SetLineColor(kGreen);
+
+    h_neutron4GeV_TileHits->Draw("same");
+    h_neutron4GeV_TileHits->SetLineColor(kOrange);
+
+    h_neutron5GeV_TileHits->Draw("same");
+    h_neutron5GeV_TileHits->SetLineColor(kCyan);
+
+    h_neutron6GeV_TileHits->Draw("same");
+    h_neutron6GeV_TileHits->SetLineColor(kMagenta);
+
+    h_neutron7GeV_TileHits->Draw("same");
+    h_neutron7GeV_TileHits->SetLineColor(kGreen+2);
+
+    h_neutron8GeV_TileHits->Draw("same");
+    h_neutron8GeV_TileHits->SetLineColor(kBlack);
+
+    h_neutron9GeV_TileHits->Draw("same");
+    h_neutron9GeV_TileHits->SetLineColor(kGray);
+
+    h_neutron10GeV_TileHits->Draw("same");
+    h_neutron10GeV_TileHits->SetLineColor(kViolet+1);
+
+    TLegend* leg_TileHitsHists = new TLegend(0.65, 0.45, 0.85, 0.85);
+    leg_TileHitsHists->AddEntry(h_neutron1GeV_TileHits, "1 GeV", "l");
+    leg_TileHitsHists->AddEntry(h_neutron2GeV_TileHits, "2 GeV", "l");
+    leg_TileHitsHists->AddEntry(h_neutron3GeV_TileHits, "3 GeV", "l");
+    leg_TileHitsHists->AddEntry(h_neutron4GeV_TileHits, "4 GeV", "l");
+    leg_TileHitsHists->AddEntry(h_neutron5GeV_TileHits, "5 GeV", "l");
+    leg_TileHitsHists->AddEntry(h_neutron6GeV_TileHits, "6 GeV", "l");
+    leg_TileHitsHists->AddEntry(h_neutron7GeV_TileHits, "7 GeV", "l");
+    leg_TileHitsHists->AddEntry(h_neutron8GeV_TileHits, "8 GeV", "l");
+    leg_TileHitsHists->AddEntry(h_neutron9GeV_TileHits, "9 GeV", "l");
+    leg_TileHitsHists->AddEntry(h_neutron10GeV_TileHits, "10 GeV", "l");
+    leg_TileHitsHists->SetTextFont(43);
+    leg_TileHitsHists->SetTextSize(29.76);
+    leg_TileHitsHists->SetBorderSize(0);
+    leg_TileHitsHists->Draw("same");
+
 
 }
