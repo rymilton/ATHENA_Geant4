@@ -9,7 +9,7 @@ particle="pi+"
 num_events=5000
 energies=(1 2 5 10 20 30 40 50 60 70 80 90 100)
 
-for (( k=8; k<13; k++ ))
+for (( k=0; k<13; k++ ))
 do
 
 	sed -i "s/\/analysis\/setFileName .*/\/analysis\/setFileName ${particle}_${energies[k]}GeV/" $filename
