@@ -130,12 +130,13 @@ TH1D* TailCatcher(TTree* total_tree, TTree* HCal_tree, Double_t energy, Double_t
     for(Int_t i = 0; i < num_events; i++)
     {
         total_tree->GetEntry(i);
-        if(ECalEdep < 0.126) ECalEdep = 0.;
+        if(ECalEdep < 0.183) ECalEdep = 0.;
         ECalEdep_array[ECal_EventID] = ECalEdep;
 
         for(Int_t itile = 0; itile < 36*num_total_layers; itile++)
         {
             HCal_tree->GetEntry(itile + i*36*num_total_layers);
+            if(HCalTileEdep < 0.5) HCalTileEdep = 0.;
             HCalEdep_array[HCal_EventID] += HCalTileEdep;
             if( (HCal_LayerID + 1) > num_total_layers - num_tail) 
             {
@@ -148,7 +149,6 @@ TH1D* TailCatcher(TTree* total_tree, TTree* HCal_tree, Double_t energy, Double_t
     {
         Double_t fraction = 1.;
         if( (ECalEdep_array[i]/optimal_weight + HCalEdep_array[i]) != 0.) fraction = TailCatch_array[i] / (ECalEdep_array[i]/optimal_weight + HCalEdep_array[i]);
-        Double_t reweighted_HCal = HCalEdep_array[i];
         if(fraction < 0.01)
         {
             h_TotalEdep->Fill(ECalEdep_array[i]/optimal_weight + HCalEdep_array[i]);
@@ -166,9 +166,7 @@ void Resolution(std::string particle = "e-", Double_t energy = 1.0)
     else std::cout<<"Not using weighting for ECal."<<std::endl;
 
     TString file_name;
-    //file_name.Form("test.root");
     file_name.Form("%s_QGSP/%s_%0.0fGeV.root", particle.c_str(), particle.c_str(), energy);
-    // file_name.Form("%s_%0.0fGeV.root", particle.c_str(), energy);
     std::cout<<"Opening "<<file_name<<std::endl;
     TFile* data_file = new TFile(file_name);
 
@@ -179,10 +177,7 @@ void Resolution(std::string particle = "e-", Double_t energy = 1.0)
     std::cout<<"Number of events: "<<num_events<<std::endl;
 
     Double_t optimal_weight = 1.0;
-    Double_t HCal_reweight = 0.;
     if(ECal_weight) optimal_weight = ECalWeightingProcess(Total_tree, energy);
-    //if(EnableTailCatcher && ECal_weight) HCal_reweight = TailCatcherProcess(Total_tree, HCal_tree, energy, optimal_weight);
-
 
     Double_t ECalEdep, HCalEdep;
     Total_tree->SetBranchAddress("ECal_Edep_Total", &ECalEdep);
@@ -196,9 +191,7 @@ void Resolution(std::string particle = "e-", Double_t energy = 1.0)
             Total_tree->GetEntry(i);
             if(ECalEdep < 0.183) ECalEdep = 0.;
             Double_t ECal_energy = ECalEdep/optimal_weight;
-            Double_t total_energy;
-            if(1==2) total_energy = ECal_energy + HCal_reweight;
-            else total_energy = ECal_energy + HCalEdep;
+            Double_t total_energy = ECal_energy + HCalEdep;
             h_TotalEdep->Fill(total_energy);
         }
     }
