@@ -9,7 +9,8 @@
 #include "G4SDManager.hh"
 #include "G4ios.hh"
 #include "G4SystemOfUnits.hh"
-#include "DetectorConstruction.hh"
+#include "Analysis.hh"
+#include "G4RunManager.hh"
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
@@ -57,18 +58,15 @@ G4bool CalorimeterSD::ProcessHits(G4Step* step,
 {  
   // energy deposit
   auto edep = step->GetTotalEnergyDeposit();
-  
-  // step length
-  G4double stepLength = 0.;
 
-  if ( step->GetTrack()->GetDefinition()->GetPDGCharge() != 0. ) {  // Only using step length for Birk's formula, which applies only to charged particles
-    stepLength = step->GetStepLength();  
-  }
-  if ( edep==0. && stepLength == 0. ) return true;      
+  // step length
+  // Using step length for Birk's formula, which applies only to charged particles
+  G4double stepLength = (step->GetTrack()->GetDefinition()->GetPDGCharge() != 0.) ? step->GetStepLength() : 0.;
+
   auto touchable = (step->GetPreStepPoint()->GetTouchable());
   
   auto volume = step->GetPreStepPoint()->GetTouchableHandle()->GetVolume();
-  // Get calorimeter cell id 
+  // Get calorimeter cell id
   auto layerNumber = touchable->GetReplicaNumber(1);
 
   // Get hit accounting data for this cell
@@ -78,8 +76,8 @@ G4bool CalorimeterSD::ProcessHits(G4Step* step,
     msg << "Cannot access hit " << layerNumber; 
     G4Exception("CalorimeterSD::ProcessHits()",
       "MyCode0004", FatalException, msg);
-  }         
-
+  }
+  
   // Get hit for total accounting
   auto hitTotal 
     = (*fHitsCollection)[fHitsCollection->entries()-1];
@@ -88,11 +86,34 @@ G4bool CalorimeterSD::ProcessHits(G4Step* step,
   G4Material* mat = volume->GetLogicalVolume()->GetMaterial();
   G4double charge = step->GetTrack()->GetDefinition()->GetPDGCharge();
   G4double birk = mat->GetIonisation()->GetBirksConstant();
-  if(birk*edep*stepLength*charge !=0) edep /= (1. + birk*edep/stepLength); // Done for charged particles in organic scintillators
+  
+  if (birk * edep * stepLength * charge != 0)
+  {
+    edep /= (1. + birk * edep / stepLength); // Done for charged particles in organic scintillators
+  }
+
+  // Tracking and saving pi0 information
+  // Used during analysis to calculate the electromagnetic fraction
+  G4double energyPi0 = 0.;
+  G4int numPi0 = 0;
+  if (step->GetTrack()->GetDefinition()->GetParticleName() == "pi0")
+  {
+    energyPi0 = step->GetTrack()->GetTotalEnergy();
+    auto analysisManager = G4AnalysisManager::Instance();
+    G4int event_number = G4RunManager::GetRunManager()->GetCurrentEvent()->GetEventID();
+    analysisManager->FillNtupleDColumn(4, 0, energyPi0);
+    analysisManager->FillNtupleDColumn(4, 1, step->GetPreStepPoint()->GetPosition().x()/cm);
+    analysisManager->FillNtupleDColumn(4, 2, step->GetPreStepPoint()->GetPosition().y()/cm);
+    analysisManager->FillNtupleDColumn(4, 3, step->GetPreStepPoint()->GetPosition().z()/cm + 8.5);
+    analysisManager->FillNtupleIColumn(4, 4, event_number);
+    analysisManager->AddNtupleRow(4);
+    numPi0++;
+  }
+
 
   // Add values
-  hit->Add(edep, stepLength);
-  hitTotal->Add(edep, stepLength); 
+  hit->Add(edep, stepLength, energyPi0, numPi0);
+  hitTotal->Add(edep, stepLength, energyPi0, numPi0);  
   
   return true;
 }
