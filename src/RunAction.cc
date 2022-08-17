@@ -19,7 +19,7 @@ RunAction::RunAction()
   G4RunManager::GetRunManager()->SetPrintProgress(0);     
 
   // Create analysis manager
-  // The choice of analysis technology is done via selectin of a namespace
+  // The choice of analysis technology is done via selection of a namespace
   // in Analysis.hh
   auto analysisManager = G4AnalysisManager::Instance();
 
@@ -30,34 +30,64 @@ RunAction::RunAction()
 
   // Book histograms, ntuple
 
-  analysisManager->CreateNtuple("EdepTotal", "Edep");
-  analysisManager->CreateNtupleDColumn("ECal_Edep_Total");
-  analysisManager->CreateNtupleDColumn("HCal_Edep_Total");
-  analysisManager->CreateNtupleIColumn("ECal_NumHits_Total");
-  analysisManager->CreateNtupleIColumn("HCal_NumHits_Total");
+  analysisManager->CreateNtuple("EdepTotal", "EdepTotal");
+  analysisManager->CreateNtupleDColumn("ECal_Edep_Active_Total");
+  analysisManager->CreateNtupleDColumn("ECal_EdepPi0_Active_Total");
+  analysisManager->CreateNtupleDColumn("HCal_Edep_Active_Total");
+  analysisManager->CreateNtupleDColumn("HCal_EdepPi0_Active_Total");
+  analysisManager->CreateNtupleDColumn("ECal_Edep_Absorber_Total");
+  analysisManager->CreateNtupleDColumn("ECal_EdepPi0_Absorber_Total");
+  analysisManager->CreateNtupleDColumn("HCal_Edep_Absorber_Total");
+  analysisManager->CreateNtupleDColumn("HCal_EdepPi0_Absorber_Total");
+  analysisManager->CreateNtupleIColumn("ECal_Num_Active_Pi0");
+  analysisManager->CreateNtupleIColumn("HCal_Num_Active_Pi0");
+  analysisManager->CreateNtupleIColumn("ECal_Num_Absorber_Pi0");
+  analysisManager->CreateNtupleIColumn("HCal_Num_Absorber_Pi0");
   analysisManager->CreateNtupleIColumn("eventID");
   analysisManager->FinishNtuple();
 
   analysisManager->CreateNtuple("ECalBlocks", "ECalBlocks");
-  analysisManager->CreateNtupleDColumn("ECal_Edep_Block");
+  analysisManager->CreateNtupleDColumn("ECal_Edep_Active_Block");
+  analysisManager->CreateNtupleDColumn("ECal_EdepPi0_Active_Block");
+  analysisManager->CreateNtupleDColumn("ECal_Edep_Absorber_Block");
+  analysisManager->CreateNtupleDColumn("ECal_EdepPi0_Absorber_Block");
+  analysisManager->CreateNtupleIColumn("ECal_Num_Active_Pi0");
+  analysisManager->CreateNtupleIColumn("ECal_Num_Absorber_Pi0");
   analysisManager->CreateNtupleIColumn("ECal_BlockXid");
   analysisManager->CreateNtupleIColumn("ECal_BlockYid");
   analysisManager->CreateNtupleIColumn("eventID");
   analysisManager->FinishNtuple();
 
   analysisManager->CreateNtuple("HCalTowers", "HCalTowers");
-  analysisManager->CreateNtupleDColumn("HCal_Edep_Tower");
+  analysisManager->CreateNtupleDColumn("HCal_Edep_Active_Tower");
+  analysisManager->CreateNtupleDColumn("HCal_EdepPi0_Active_Tower");
+  analysisManager->CreateNtupleDColumn("HCal_Edep_Absorber_Tower");
+  analysisManager->CreateNtupleDColumn("HCal_EdepPi0_Absorber_Tower");
+  analysisManager->CreateNtupleIColumn("HCal_TowerXid");
+  analysisManager->CreateNtupleIColumn("HCal_TowerYid");
+  analysisManager->CreateNtupleIColumn("HCal_Num_Active_Pi0");
+  analysisManager->CreateNtupleIColumn("HCal_Num_Absorber_Pi0");
+  analysisManager->CreateNtupleIColumn("eventID");
+  analysisManager->FinishNtuple();
+
+  analysisManager->CreateNtuple("HCalTiles", "HCalTiles");
+  analysisManager->CreateNtupleDColumn("HCal_Edep_Active_Tile");
+  analysisManager->CreateNtupleDColumn("HCal_EdepPi0_Active_Tile");
+  analysisManager->CreateNtupleDColumn("HCal_Edep_Absorber_Tile");
+  analysisManager->CreateNtupleDColumn("HCal_EdepPi0_Absorber_Tile");
+  analysisManager->CreateNtupleIColumn("HCal_Layerid");
+  analysisManager->CreateNtupleIColumn("HCal_NumPi0_Active_Tile");
+  analysisManager->CreateNtupleIColumn("HCal_NumPi0_Absorber_Tile");
   analysisManager->CreateNtupleIColumn("HCal_TowerXid");
   analysisManager->CreateNtupleIColumn("HCal_TowerYid");
   analysisManager->CreateNtupleIColumn("eventID");
   analysisManager->FinishNtuple();
 
-  analysisManager->CreateNtuple("HCalLayers", "HCalLayers");
-  analysisManager->CreateNtupleDColumn("HCal_Edep_Tile");
-  analysisManager->CreateNtupleIColumn("HCal_Layerid");
-  analysisManager->CreateNtupleIColumn("HCal_NumHits_Tile");
-  analysisManager->CreateNtupleIColumn("HCal_TowerXid");
-  analysisManager->CreateNtupleIColumn("HCal_TowerYid");
+  analysisManager->CreateNtuple("Pi0", "Pi0");
+  analysisManager->CreateNtupleDColumn("Energy");
+  analysisManager->CreateNtupleDColumn("PosX");
+  analysisManager->CreateNtupleDColumn("PosY");
+  analysisManager->CreateNtupleDColumn("PosZ");
   analysisManager->CreateNtupleIColumn("eventID");
   analysisManager->FinishNtuple();
 
@@ -85,26 +115,8 @@ void RunAction::BeginOfRunAction(const G4Run* /*run*/)
 
 void RunAction::EndOfRunAction(const G4Run* /*run*/)
 {
-  // print histogram statistics
-  //
   auto analysisManager = G4AnalysisManager::Instance();
-  // if(isMaster) 
-  // {
-  //   G4cout << G4endl << " ----> print histograms statistic ";
-    
-  //     G4cout << "for the entire run " << G4endl << G4endl; 
-    
-  //   G4cout << " ECal : mean = " 
-  //      << G4BestUnit(analysisManager->GetH1(0)->mean(), "Energy") 
-  //      << " rms = " 
-  //      << G4BestUnit(analysisManager->GetH1(0)->rms(),  "Energy") << G4endl;
-    
-  //   G4cout << " HCal : mean = " 
-  //      << G4BestUnit(analysisManager->GetH1(1)->mean(), "Energy") 
-  //      << " rms = " 
-  //      << G4BestUnit(analysisManager->GetH1(1)->rms(),  "Energy") << G4endl;
-    
-  // }
+
   // save histograms & ntuple
   //
   analysisManager->Write();
