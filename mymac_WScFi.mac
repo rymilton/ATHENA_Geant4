@@ -1,14 +1,14 @@
 /process/em/verbose 0
 /process/had/verbose 0
 /vis/verbose 0
-/analysis/setFileName pi+_1GeV_test
+/analysis/setFileName pi+_10GeV.root
 
 /run/initialize
 
 /run/setCut .01 mm
 /gps/particle pi+
 /gps/ene/type Mono
-/gps/ene/mono 1 GeV
+/gps/ene/mono 10 GeV
 /gps/pos/type Plane
 /gps/pos/shape Square
 /gps/pos/rot1 1 0 0
