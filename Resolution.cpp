@@ -53,10 +53,10 @@ TH1D* ECalWeightingProcess(TTree* TotalTree, TTree* HCalTree, Double_t energy)
     Double_t ECalEdep, HCalTileEdep;
     Int_t ECal_EventID, HCal_EventID, HCal_LayerID;
 
-    TotalTree->SetBranchAddress("ECal_Edep_Total", &ECalEdep); // Total ECal energy per event
+    TotalTree->SetBranchAddress("ECal_Edep_Active_Total", &ECalEdep); // Total ECal energy per event
     TotalTree->SetBranchAddress("eventID", &ECal_EventID);
     
-    HCalTree->SetBranchAddress("HCal_Edep_Tile", &HCalTileEdep); // Energy per tile in each event
+    HCalTree->SetBranchAddress("HCal_Edep_Active_Tile", &HCalTileEdep); // Energy per tile in each event
     HCalTree->SetBranchAddress("HCal_Layerid", &HCal_LayerID); // Layer number that the tile belongs to
     HCalTree->SetBranchAddress("eventID", &HCal_EventID);
 
@@ -148,20 +148,21 @@ TH1D* ECalWeightingProcess(TTree* TotalTree, TTree* HCalTree, Double_t energy)
     return WeightedHists[optimal_index];
 }
 void Resolution(std::string particle = "e-", Double_t energy = 1.0)
-{   
+{
+    TString data_dir = "build";
     Bool_t ECal_weight = kTRUE; // Weighting procedure used for hadrons
     if(particle == "e-" || particle == "pi0") ECal_weight = kFALSE;
     if(ECal_weight) std::cout<<"Using weighting for ECal."<<std::endl;
     else std::cout<<"Not using weighting for ECal."<<std::endl;
 
     TString file_name;
-    file_name.Form("%s_QGSP/%s_%0.0fGeV.root", particle.c_str(), particle.c_str(), energy); // Output file from Geant4 simulation. Change to whatever name you have.
+    file_name.Form(data_dir+"/%s_%0.0fGeV.root", particle.c_str(), particle.c_str(), energy); // Output file from Geant4 simulation. Change to whatever name you have.
     std::cout<<"Opening "<<file_name<<std::endl;
     TFile* data_file = new TFile(file_name);
 
     TH1D* h_TotalEdep = new TH1D("h_TotalEdep", "", 600, 0, Beam_MaxEnergy[energy]);
     TTree* TotalTree = (TTree*) data_file->Get("EdepTotal"); // Tree that holds total energy for HCal and ECal
-    TTree* HCalTree = (TTree*) data_file->Get("HCalLayers"); // Tree that holds individual tile information for HCal
+    TTree* HCalTree = (TTree*) data_file->Get("HCalTiles"); // Tree that holds individual tile information for HCal
     Int_t num_events = (Int_t) TotalTree->GetEntries();
     std::cout<<"Number of events: "<<num_events<<std::endl;
 
@@ -171,10 +172,10 @@ void Resolution(std::string particle = "e-", Double_t energy = 1.0)
         Double_t ECalEdep, HCalTileEdep;
         Int_t ECal_EventID, HCal_EventID, HCal_LayerID;
 
-        TotalTree->SetBranchAddress("ECal_Edep_Total", &ECalEdep); // Total energy in ECal per event
+        TotalTree->SetBranchAddress("ECal_Edep_Active_Total", &ECalEdep); // Total energy in ECal per event
         TotalTree->SetBranchAddress("eventID", &ECal_EventID);
         
-        HCalTree->SetBranchAddress("HCal_Edep_Tile", &HCalTileEdep); // Energy per tile in each event
+        HCalTree->SetBranchAddress("HCal_Edep_Active_Tile", &HCalTileEdep); // Energy per tile in each event
         HCalTree->SetBranchAddress("HCal_Layerid", &HCal_LayerID); // Layer number that the tile belongs to
         HCalTree->SetBranchAddress("eventID", &HCal_EventID);
 
