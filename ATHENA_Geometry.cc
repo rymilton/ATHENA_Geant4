@@ -2,21 +2,18 @@
 #include "ActionInitialization.hh"
 
 #include "G4RunManagerFactory.hh"
-
 #include "G4UImanager.hh"
 #include "G4UIcommand.hh"
-#include "FTFP_BERT_HP.hh"
 #include "QGSP_BERT.hh"
-
 #include "Randomize.hh"
-
 #include "G4VisExecutive.hh"
 #include "G4UIExecutive.hh"
 
 namespace {
   void PrintUsage() {
     G4cerr << " Usage: " << G4endl;
-    G4cerr << " ATHENA_Geometry [-m macro ] [-u UIsession] [-t nThreads]" << G4endl;
+    G4cerr << " ATHENA_Geometry [-m macro ] [-u UIsession] [-t nThreads]" 
+          << G4endl;
     G4cerr << "   note: -t option is available only for multi-threaded mode."
            << G4endl;
   }
@@ -52,15 +49,13 @@ int main(int argc,char** argv)
   
   // Detect interactive mode (if no macro provided) and define UI session
   //
-  G4UIExecutive* ui = 0;
+  G4UIExecutive* ui = nullptr;
   if ( ! macro.size() ) {
     ui = new G4UIExecutive(argc, argv, session);
   }
 
-  // Choose a Random engine...
-  //
-  G4Random::setTheEngine(new CLHEP::RanecuEngine);
-  
+  // Use default random engine. Important when using multi-threading apparently
+
   // Construct the default run manager
   //
   auto* runManager =
@@ -73,9 +68,14 @@ int main(int argc,char** argv)
 
   // Set mandatory initialization classes
   //
-  runManager->SetUserInitialization(new DetectorConstruction());
-  runManager->SetUserInitialization(new QGSP_BERT);
-  runManager->SetUserInitialization(new ActionInitialization());
+  auto detConstruction = new DetectorConstruction();
+  runManager->SetUserInitialization(detConstruction);
+
+  auto physicsList = new QGSP_BERT;
+  runManager->SetUserInitialization(physicsList);
+  
+  auto actionInitialization = new ActionInitialization();
+  runManager->SetUserInitialization(actionInitialization);
   
   // Initialize visualization
   auto visManager = new G4VisExecutive;
@@ -103,4 +103,6 @@ int main(int argc,char** argv)
 
   delete visManager;
   delete runManager;
+
+  return 0;
 }
