@@ -16,7 +16,8 @@ CalorHit::CalorHit()
  : G4VHit(),
    fEdep(0.),
    fTrackLength(0.),
-   fNumHits(0)
+   fEdepPi0(0.),
+   fNumPi0(0)
 {}
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -30,6 +31,7 @@ CalorHit::CalorHit(const CalorHit& right)
 {
   fEdep        = right.fEdep;
   fTrackLength = right.fTrackLength;
+  fEdepPi0     = right.fEdepPi0;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -38,7 +40,7 @@ const CalorHit& CalorHit::operator=(const CalorHit& right)
 {
   fEdep        = right.fEdep;
   fTrackLength = right.fTrackLength;
-
+  fEdepPi0     = right.fEdepPi0;
   return *this;
 }
 

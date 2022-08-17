@@ -36,17 +36,19 @@ class CalorHit : public G4VHit
     virtual void Print();
 
     // methods to handle data
-    void Add(G4double de, G4double dl);
+    void Add(G4double de, G4double dl, G4double dePi0, G4int nPi0);
 
     // get methods
     G4double GetEdep() const;
     G4double GetTrackLength() const;
-    G4int GetNumHits() const;
-      
+    G4double GetEdepPi0() const;
+    G4int GetNumPi0() const;
+
   private:
     G4double fEdep;        ///< Energy deposit in the sensitive volume
     G4double fTrackLength; ///< Track length in the  sensitive volume
-    G4int fNumHits; // Number of hits in the sensitive volume
+    G4double fEdepPi0;
+    G4int fNumPi0;
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -75,10 +77,11 @@ inline void CalorHit::operator delete(void *hit)
   CalorHitAllocator->FreeSingle((CalorHit*) hit);
 }
 
-inline void CalorHit::Add(G4double de, G4double dl) {
+inline void CalorHit::Add(G4double de, G4double dl, G4double dePi0, G4int nPi0) {
   fEdep += de; 
   fTrackLength += dl;
-  fNumHits++;
+  fEdepPi0 += dePi0;
+  fNumPi0 += nPi0;
 }
 
 inline G4double CalorHit::GetEdep() const { 
@@ -88,8 +91,11 @@ inline G4double CalorHit::GetEdep() const {
 inline G4double CalorHit::GetTrackLength() const { 
   return fTrackLength; 
 }
-inline G4int CalorHit::GetNumHits() const {
-  return fNumHits;
+inline G4double CalorHit::GetEdepPi0() const {
+  return fEdepPi0;
+}
+inline G4int CalorHit::GetNumPi0() const {
+  return fNumPi0;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
