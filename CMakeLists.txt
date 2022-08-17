@@ -49,9 +49,6 @@ set(ATHENA_Geometry_SCRIPTS
   vis.mac
   mymac_WScFi.mac
   energy_loop.sh
-  Resolution.cpp
-  BarrelAnalysis.cpp
-  mu_pi.cpp
   )
 
 foreach(_script ${ATHENA_Geometry_SCRIPTS})
