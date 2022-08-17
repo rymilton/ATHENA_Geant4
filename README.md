@@ -8,12 +8,11 @@ git clone https://github.com/rymilton/ATHENA_Geant4.git
 cd ATHENA_Geant4
 mkdir build && cd build
 cmake ..
-make install (there will be warnings that can be ignored)
+make (there will be warnings that can be ignored)
 ````
-If you make changes to the files, you'll have to `make install` again in the `build` directory. You can also install to another directory with
-`cmake .. -DCMAKE_INSTALL_PREFIX=install` where `install` is some other directoy.
+If you make changes to the files, you'll have to `make` again in the `build` directory.
 
-To run the simulation, go to your install directory and use `./ATHENA_Geometry -m mymac_WScFi.mac -t num_threads`,
+To run the simulation, go to your build directory and use `./ATHENA_Geometry -m mymac_WScFi.mac -t num_threads`,
 where `num_threads` is the number of threads you want to use.
 energy_loop.sh is also provided to generate multiple energies in one process.
 
