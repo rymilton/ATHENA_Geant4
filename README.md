@@ -8,7 +8,7 @@ git clone https://github.com/rymilton/ATHENA_Geant4.git
 cd ATHENA_Geant4
 mkdir build && cd build
 cmake ..
-make install
+make install (there will be warnings that can be ignored)
 ````
 If you make changes to the files, you'll have to `make install` again in the `build` directory. You can also install to another directory with
 `cmake .. -DCMAKE_INSTALL_PREFIX=install` where `install` is some other directoy.
